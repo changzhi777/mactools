@@ -43,11 +43,27 @@ MacTools 是一个面向 macOS 开发者和 AI 用户的工具集，包含本地
 
 > **⚡ 快速体验 MacClaw AI 环境 - 3 步搞定**
 
+### 🌟 POSIX 版本（推荐 - 最大兼容性）
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/changzhi777/mactools/main/macclaw-installer/install-posix.sh | sh
+```
+
+**优点**:
+- ✅ 兼容所有主流 shell（sh/bash/zsh/dash）
+- ✅ 适用于容器和嵌入式系统
+- ✅ 符合 POSIX 标准
+
+**或使用 wget**:
+```bash
+wget -qO- https://raw.githubusercontent.com/changzhi777/mactools/main/macclaw-installer/install-posix.sh | sh
+```
+
+### 🔧 Bash 版本（功能丰富）
+
 ```bash
 curl -fsSL https://raw.githubusercontent.com/changzhi777/mactools/main/macclaw-installer/install.sh | bash
 ```
-
-**就这么简单！** 🎉
 
 **或使用 wget**:
 ```bash
