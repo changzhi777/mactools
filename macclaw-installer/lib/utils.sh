@@ -40,7 +40,15 @@ show_welcome() {
 
 按 Enter 继续，或 Ctrl+C 退出...
 EOF
-    read
+    # 检测是否在管道模式下，如果是则跳过等待
+    if [ -t 0 ]; then
+        # 终端模式，正常等待用户输入
+        read
+    else
+        # 管道模式（curl | sh），跳过等待自动继续
+        log_info "检测到在线安装模式，自动继续..."
+        sleep 1
+    fi
 }
 
 # 显示配置国内源
@@ -93,7 +101,16 @@ select_components() {
     echo ""
     echo -n "请选择: "
 
-    read choice
+    local choice
+    if [ -t 0 ]; then
+        # 终端模式，正常读取用户输入
+        read choice
+    else
+        # 管道模式，默认选择全部
+        log_info "检测到在线安装模式，默认选择全部组件..."
+        choice="all"
+        sleep 1
+    fi
 
     case "$choice" in
         all)
@@ -189,7 +206,17 @@ confirm_action() {
     local default=${2:-"n"}
 
     echo -n "$message [y/N]: "
-    read response
+    local response
+
+    if [ -t 0 ]; then
+        # 终端模式，正常读取用户输入
+        read response
+    else
+        # 管道模式，使用默认值
+        log_info "检测到在线安装模式，使用默认值: $default"
+        response="$default"
+        sleep 1
+    fi
 
     if [ -z "$response" ]; then
         response="$default"
@@ -254,7 +281,14 @@ check_success() {
 wait_for_key() {
     echo ""
     echo -n "按 Enter 继续..."
-    read
+    if [ -t 0 ]; then
+        # 终端模式，正常等待用户输入
+        read
+    else
+        # 管道模式，自动继续
+        log_info "检测到在线安装模式，自动继续..."
+        sleep 1
+    fi
 }
 
 # 显示分隔线

@@ -377,7 +377,14 @@ main() {
     echo ""
     printf "请输入选项 (1-5): "
 
-    read choice
+    if [ -t 0 ]; then
+        read choice
+    else
+        echo ""
+        echo "💡 检测到在线安装模式，默认选择全部组件"
+        choice="5"
+        sleep 1
+    fi
 
     case "$choice" in
         1)
@@ -411,7 +418,15 @@ main() {
     echo ""
 
     printf "确认开始安装？ [y/N]: "
-    read confirm
+    local confirm
+    if [ -t 0 ]; then
+        read confirm
+    else
+        echo ""
+        echo "💡 检测到在线安装模式，自动确认安装"
+        confirm="y"
+        sleep 1
+    fi
 
     if [ ! "$confirm" = "y" ] && [ ! "$confirm" = "Y" ]; then
         echo "已取消安装"
@@ -546,7 +561,13 @@ show_completion_report() {
 
 按 Enter 打开 Web UI...
 EOF
-    read
+    # 检测是否在管道模式下
+    if [ -t 0 ]; then
+        read
+    else
+        echo "💡 检测到在线安装模式，自动打开浏览器..."
+        sleep 1
+    fi
 
     # 打开浏览器
     if command -v open >/dev/null 2>&1; then
