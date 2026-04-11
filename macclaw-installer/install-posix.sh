@@ -72,21 +72,42 @@ download_via_curl() {
         return 1
     fi
 
-    if ! unzip -q "$output_file"; then
+    # 尝试使用 unzip 解压，处理中文文件名
+    # macOS 使用 GB18030，Linux 使用 UTF-8
+    if unzip -q -O UTF-8 "$output_file" 2>/dev/null || \
+       unzip -q -O GB18030 "$output_file" 2>/dev/null || \
+       unzip -q "$output_file"; then
+        echo "✅ 解压成功"
+    else
         echo "❌ 解压失败"
+        echo "💡 可能原因："
+        echo "   1. 压缩文件损坏"
+        echo "   2. 磁盘空间不足"
+        echo "   3. 文件名编码问题"
         rm -f "$output_file"
         return 1
     fi
 
+    # 检测解压后的目录（处理可能的中文文件名）
     if [ -d "mactools-main" ]; then
         mv mactools-main "$target_dir"
-        echo "✅ 解压成功"
         rm -f "$output_file"
         return 0
     else
-        echo "❌ 解压后未找到 mactools-main 目录"
-        rm -f "$output_file"
-        return 1
+        # 尝试查找包含 macclaw-installer 的目录
+        extracted_dir=$(find . -maxdepth 1 -type d -name "*mactools*" | head -1)
+        if [ -n "$extracted_dir" ] && [ -d "$extracted_dir" ]; then
+            mv "$extracted_dir" "$target_dir"
+            rm -f "$output_file"
+            echo "✅ 找到并移动目录: $extracted_dir"
+            return 0
+        else
+            echo "❌ 解压后未找到 mactools 目录"
+            echo "💡 当前目录内容:"
+            ls -la
+            rm -f "$output_file"
+            return 1
+        fi
     fi
 }
 
