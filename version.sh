@@ -206,7 +206,10 @@ check_version_consistency() {
                 inconsistent_files+=("$file: $file_version")
             fi
         fi
-    done < <(find . -name "*.sh" -type f -print0)
+    find . -name "*.sh" -type f -print0 > /tmp/version_check_files.$$
+    done < /tmp/version_check_files.$
+    rm -f /tmp/version_check_files.$
+
 
     if [ ${#inconsistent_files[@]} -eq 0 ]; then
         echo -e "${GREEN}✓ 所有文件版本一致${NC}"
