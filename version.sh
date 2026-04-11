@@ -4,7 +4,7 @@
 # 作者: 外星动物（常智）
 # 组织: IoTchange
 # 邮箱: 14455975@qq.com
-# 版本: V1.0.0
+# 版本: V1.0.1
 # 版权: Copyright (C) 2026 IoTchange - All Rights Reserved
 #
 # 说明: 自动更新项目版本号（每次推送更新第三位数字+1）
