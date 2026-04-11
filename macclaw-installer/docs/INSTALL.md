@@ -25,21 +25,21 @@
 ### 方法 1: 一键安装（推荐）
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/IoTchange/macclaw-installer/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/changzhi777/mactools/main/macclaw-installer/install.sh | bash
 ```
 
 ### 方法 2: 使用 wget
 
 ```bash
-wget -qO- https://raw.githubusercontent.com/IoTchange/macclaw-installer/main/install.sh | bash
+wget -qO- https://raw.githubusercontent.com/changzhi777/mactools/main/macclaw-installer/install.sh | bash
 ```
 
 ### 方法 3: 手动安装
 
 ```bash
 # 1. 克隆仓库
-git clone https://github.com/IoTchange/macclaw-installer.git
-cd macclaw-installer
+git clone https://github.com/changzhi777/mactools.git
+cd mactools/macclaw-installer
 
 # 2. 运行安装脚本
 chmod +x install.sh
@@ -179,13 +179,13 @@ lsof -i :8008
 ### 一键卸载
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/IoTchange/macclaw-installer/main/uninstall.sh | bash
+curl -fsSL https://raw.githubusercontent.com/changzhi777/mactools/main/macclaw-installer/uninstall.sh | bash
 ```
 
 ### 手动卸载
 
 ```bash
-cd macclaw-installer
+cd mactools/macclaw-installer
 chmod +x uninstall.sh
 ./uninstall.sh
 ```
@@ -194,8 +194,8 @@ chmod +x uninstall.sh
 
 ## 📞 获取帮助
 
-- **项目地址:** https://github.com/IoTchange/macclaw-installer
-- **问题反馈:** https://github.com/IoTchange/macclaw-installer/issues
+- **项目地址:** https://github.com/changzhi777/mactools
+- **问题反馈:** https://github.com/changzhi777/mactools/issues
 - **邮箱:** 14455975@qq.com
 
 ---

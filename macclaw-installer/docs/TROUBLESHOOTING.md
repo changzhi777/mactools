@@ -383,7 +383,7 @@ cat ~/.omlx/settings.json >> ~/diagnostic-info.txt
 ### 问题反馈
 
 **GitHub Issues:**  
-https://github.com/IoTchange/macclaw-installer/issues
+https://github.com/changzhi777/mactools/issues
 
 **邮件支持:**  
 14455975@qq.com
@@ -466,7 +466,7 @@ npm update -g openclaw
 
 **作者:** 外星动物（常智）  
 **邮箱:** 14455975@qq.com  
-**项目:** https://github.com/IoTchange/macclaw-installer
+**项目:** https://github.com/changzhi777/mactools
 
 ---
 

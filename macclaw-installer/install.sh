@@ -8,7 +8,7 @@
 # 版权: Copyright (C) 2026 IoTchange - All Rights Reserved
 #
 # 说明: 一键安装 OpenClaw + oMLX + 本地 AI 模型
-# 使用: curl -fsSL https://raw.githubusercontent.com/IoTchange/macclaw-installer/main/install.sh | bash
+# 使用: curl -fsSL https://raw.githubusercontent.com/changzhi777/mactools/main/macclaw-installer/install.sh | bash
 #
 
 set -e  # 遇到错误立即退出

@@ -72,7 +72,7 @@ cd macclaw-installer
 git init
 git add .
 git commit -m "Initial commit"
-git remote add origin git@github.com:IoTchange/macclaw-installer.git
+git remote add origin git@github.com:changzhi777/mactools.git
 git branch -M main
 git push -u origin main
 ```
@@ -107,7 +107,7 @@ git config --global --list
 git remote -v
 ```
 
-应显示：`origin git@github.com:IoTchange/macclaw-installer.git`
+应显示：`origin git@github.com:changzhi777/mactools.git`
 
 ---
 
@@ -122,7 +122,7 @@ git remote -v
 ### 切换到 SSH
 
 ```bash
-git remote set-url origin git@github.com:IoTchange/macclaw-installer.git
+git remote set-url origin git@github.com:changzhi777/mactools.git
 ```
 
 ---
@@ -157,7 +157,7 @@ chmod 644 ~/.ssh/id_ed25519.pub
 
 - **GitHub 文档:** https://docs.github.com/zh/authentication
 - **SSH 设置:** https://github.com/settings/keys
-- **项目地址:** https://github.com/IoTchange/macclaw-installer
+- **项目地址:** https://github.com/changzhi777/mactools
 
 ---
 

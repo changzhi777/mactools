@@ -99,12 +99,12 @@ echo ""
 if [ -d "macclaw-installer/.git" ]; then
     cd macclaw-installer
     echo "配置本地仓库..."
-    git remote set-url origin git@github.com:IoTchange/macclaw-installer.git
+    git remote set-url origin git@github.com:changzhi777/mactools.git
     echo -e "${GREEN}✅ 仓库已配置为使用 SSH${NC}"
     cd ..
 else
     echo -e "${BLUE}💡 当你创建 GitHub 仓库后，使用以下命令配置：${NC}"
-    echo "  git remote set-url origin git@github.com:IoTchange/macclaw-installer.git"
+    echo "  git remote set-url origin git@github.com:changzhi777/mactools.git"
 fi
 echo ""
 

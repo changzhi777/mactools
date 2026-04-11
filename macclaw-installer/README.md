@@ -38,20 +38,20 @@ MacClaw Installer 是一个一键安装 OpenClaw（小龙虾）+ oMLX 本地 AI 
 ### 一键安装（推荐）
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/IoTchange/macclaw-installer/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/changzhi777/mactools/main/macclaw-installer/install.sh | bash
 ```
 
 ### 使用 wget
 
 ```bash
-wget -qO- https://raw.githubusercontent.com/IoTchange/macclaw-installer/main/install.sh | bash
+wget -qO- https://raw.githubusercontent.com/changzhi777/mactools/main/macclaw-installer/install.sh | bash
 ```
 
 ### 手动安装
 
 ```bash
 # 克隆仓库
-git clone https://github.com/IoTchange/macclaw-installer.git
+git clone https://github.com/changzhi777/mactools.git
 cd macclaw-installer
 
 # 运行安装脚本
@@ -82,13 +82,13 @@ chmod +x install.sh
 ### 一键卸载
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/IoTchange/macclaw-installer/main/uninstall.sh | bash
+curl -fsSL https://raw.githubusercontent.com/changzhi777/mactools/main/macclaw-installer/uninstall.sh | bash
 ```
 
 ### 手动卸载
 
 ```bash
-git clone https://github.com/IoTchange/macclaw-installer.git
+git clone https://github.com/changzhi777/mactools.git
 cd macclaw-installer
 chmod +x uninstall.sh
 ./uninstall.sh
@@ -246,8 +246,8 @@ macclaw-installer/
 **作者:** 外星动物（常智）  
 **组织:** IoTchange  
 **邮箱:** 14455975@qq.com  
-**项目:** https://github.com/IoTchange/macclaw-installer  
-**问题反馈:** https://github.com/IoTchange/macclaw-installer/issues
+**项目:** https://github.com/changzhi777/mactools  
+**问题反馈:** https://github.com/changzhi777/mactools/issues
 
 ---
 

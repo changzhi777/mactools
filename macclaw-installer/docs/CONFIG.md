@@ -291,8 +291,8 @@ open -a oMLX
 
 ## 📞 获取帮助
 
-- **项目文档:** https://github.com/IoTchange/macclaw-installer
-- **问题反馈:** https://github.com/IoTchange/macclaw-installer/issues
+- **项目文档:** https://github.com/changzhi777/mactools
+- **问题反馈:** https://github.com/changzhi777/mactools/issues
 
 ---
 

@@ -447,8 +447,8 @@ openclaw skills test skill-name --verbose
 
 ## 📞 获取帮助
 
-- **完整文档:** https://github.com/IoTchange/macclaw-installer
-- **问题反馈:** https://github.com/IoTchange/macclaw-installer/issues
+- **完整文档:** https://github.com/changzhi777/mactools
+- **问题反馈:** https://github.com/changzhi777/mactools/issues
 - **Skill 开发:** https://docs.openclaw.ai/skills
 
 ---

@@ -66,7 +66,7 @@ chmod +x install.sh
 **一键安装（在线）：**
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/IoTchange/macclaw-installer/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/changzhi777/mactools/main/macclaw-installer/install.sh | bash
 ```
 
 **卸载：**
