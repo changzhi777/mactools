@@ -39,6 +39,33 @@ MacTools 是一个面向 macOS 开发者和 AI 用户的工具集，包含本地
 
 ---
 
+## 🚀 一键安装 (推荐)
+
+> **⚡ 快速体验 MacClaw AI 环境 - 3 步搞定**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/changzhi777/mactools/main/macclaw-installer/install.sh | bash
+```
+
+**就这么简单！** 🎉
+
+**或使用 wget**:
+```bash
+wget -qO- https://raw.githubusercontent.com/changzhi777/mactools/main/macclaw-installer/install.sh | bash
+```
+
+**💡 安装内容**:
+- ✅ Node.js + OpenClaw CLI
+- ✅ oMLX 推理服务
+- ✅ gemma-4 AI 模型
+- ✅ Web UI (http://127.0.0.1:18789)
+
+**⏱️ 预计时间**: 15-30 分钟（国内网络）
+
+**📖 详细指南**: [INSTALL_GUIDE.md](INSTALL_GUIDE.md)
+
+---
+
 ## ⚡ 一键安装
 
 ### 🚀 在线安装 MacClaw（推荐）
