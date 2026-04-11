@@ -16,6 +16,31 @@ set -e  # 遇到错误立即退出
 # 获取脚本目录
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# 检测是否是在线安装（curl | bash 方式）
+if [ ! -d "$SCRIPT_DIR/lib" ]; then
+    echo "🔧 检测到在线安装模式，正在下载完整项目..."
+    TEMP_DIR=$(mktemp -d)
+    cd "$TEMP_DIR"
+
+    echo "📥 正在克隆项目..."
+    if command -v git &>/dev/null; then
+        git clone --depth 1 https://github.com/changzhi777/mactools.git temp_repo 2>/dev/null || {
+            echo "⚠️  Git 克隆失败，尝试使用 curl 下载..."
+            curl -fsSL https://github.com/changzhi777/mactools/archive/refs/heads/main.zip -o mactools.zip
+            unzip -q mactools.zip
+            mv mactools-main temp_repo
+        }
+    else
+        curl -fsSL https://github.com/changzhi777/mactools/archive/refs/heads/main.zip -o mactools.zip
+        unzip -q mactools.zip
+        mv mactools-main temp_repo
+    fi
+
+    SCRIPT_DIR="$TEMP_DIR/temp_repo/macclaw-installer"
+    echo "✅ 项目已下载到: $SCRIPT_DIR"
+    echo ""
+fi
+
 # 加载核心模块
 source "$SCRIPT_DIR/lib/logger.sh"
 source "$SCRIPT_DIR/lib/utils.sh"
