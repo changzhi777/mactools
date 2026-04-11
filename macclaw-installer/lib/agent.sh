@@ -11,7 +11,11 @@
 #
 
 # 加载日志模块
-source "$(dirname "$0")/logger.sh"
+if [ -n "$MACCLAW_LIB_DIR" ]; then
+    source "$MACCLAW_LIB_DIR/logger.sh"
+else
+    source "$(dirname "$0")/logger.sh"
+fi
 
 # 创建 Agent
 create_agent() {
