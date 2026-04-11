@@ -1,0 +1,36 @@
+# AI 工具配置
+.agent/
+.claude/
+.codebuddy/
+.codex/
+.continue/
+.cursor/
+.gemini/
+.kiro/
+.opencode/
+.qoder/
+.roo/
+.trae/
+.windsurf/
+.zcf/
+
+# 系统文件
+.DS_Store
+.Thumbs.db
+
+# 编辑器配置
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 临时文件
+*.log
+*.tmp
+.env
+.env.local
+
+# SSH 密钥（安全）
+*.pem
+id_ed25519_*
