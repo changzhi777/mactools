@@ -1,8 +1,11 @@
-#!/bin/bash
+1.#!/bin/bash
 #
 # GitHub SSH Key 配置脚本
 # 作者: 外星动物（常智）
+# 组织: IoTchange
+# 邮箱: 14455975@qq.com
 # 版本: V1.0.1
+# 版权: Copyright (C) 2026 IoTchange - All Rights Reserved
 #
 
 set -e
