@@ -13,68 +13,124 @@
 
 set -e  # 遇到错误立即退出
 
+# ============================================
+# 下载函数（消除代码重复）
+# ============================================
+
+# 通过 curl 下载并解压项目
+download_via_curl() {
+    local url="$1"
+    local output_file="$2"
+    local target_dir="$3"
+
+    if ! curl -fsSL "$url" -o "$output_file" 2>/dev/null; then
+        echo "❌ 下载失败，请检查网络连接或手动下载："
+        echo "   $url"
+        return 1
+    fi
+
+    echo "✅ 下载成功，正在解压..."
+
+    if ! command -v unzip &>/dev/null; then
+        echo "❌ 错误: 系统缺少 unzip 命令"
+        echo "💡 请先安装: brew install unzip"
+        rm -f "$output_file"
+        return 1
+    fi
+
+    if ! unzip -q "$output_file"; then
+        echo "❌ 解压失败"
+        rm -f "$output_file"
+        return 1
+    fi
+
+    if [ -d "mactools-main" ]; then
+        mv mactools-main "$target_dir"
+        echo "✅ 解压成功"
+        rm -f "$output_file"
+        return 0
+    else
+        echo "❌ 解压后未找到 mactools-main 目录"
+        rm -f "$output_file"
+        return 1
+    fi
+}
+
+# 通过 git 克隆项目
+download_via_git() {
+    local repo_url="$1"
+    local target_dir="$2"
+
+    if ! command -v git &>/dev/null; then
+        return 1
+    fi
+
+    if git clone --depth 1 "$repo_url" "$target_dir" 2>/dev/null; then
+        echo "✅ Git 克隆成功"
+        return 0
+    else
+        return 1
+    fi
+}
+
+# 自动检测并下载项目
+download_project() {
+    local temp_dir="$1"
+    local repo_url="https://github.com/changzhi777/mactools.git"
+    local zip_url="https://github.com/changzhi777/mactools/archive/refs/heads/main.zip"
+    local target_dir="$temp_dir/temp_repo"
+
+    echo "📥 正在下载项目..."
+
+    # 方法 1: 尝试使用 git clone（更快）
+    if download_via_git "$repo_url" "$target_dir"; then
+        return 0
+    fi
+
+    # 方法 2: 使用 curl 下载（备用）
+    echo "⚠️  Git 克隆失败，尝试使用 curl 下载..."
+    echo "💡 如果下载失败，请检查："
+    echo "   1. 网络连接是否正常"
+    echo "   2. GitHub 是否可访问"
+    echo "   3. 防火墙是否阻止连接"
+
+    cd "$temp_dir"
+    if download_via_curl "$zip_url" "mactools.zip" "temp_repo"; then
+        return 0
+    fi
+
+    return 1
+}
+
 # 获取脚本目录
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # 检测是否是在线安装（curl | bash 方式）
 if [ ! -d "$SCRIPT_DIR/lib" ]; then
     echo "🔧 检测到在线安装模式，正在下载完整项目..."
-    TEMP_DIR=$(mktemp -d)
-    cd "$TEMP_DIR"
 
-    # 方法 1: 尝试使用 git clone（更快）
-    echo "📥 正在克隆项目（方式 1/2）..."
-    if command -v git &>/dev/null; then
-        if git clone --depth 1 https://github.com/changzhi777/mactools.git temp_repo 2>/dev/null; then
-            echo "✅ Git 克隆成功"
-        else
-            echo "⚠️  Git 克隆失败，尝试使用 curl 下载（方式 2/2）..."
-            echo "💡 如果下载失败，请检查："
-            echo "   1. 网络连接是否正常"
-            echo "   2. GitHub 是否可访问"
-            echo "   3. 防火墙是否阻止连接"
+    TEMP_DIR=$(mktemp -d) || {
+        echo "❌ 无法创建临时目录"
+        exit 1
+    }
 
-            if curl -fsSL https://github.com/changzhi777/mactools/archive/refs/heads/main.zip -o mactools.zip 2>/dev/null; then
-                echo "✅ 下载成功，正在解压..."
-
-                # 检查是否有 unzip 命令
-                if command -v unzip &>/dev/null; then
-                    unzip -q mactools.zip
-                    mv mactools-main temp_repo
-                    echo "✅ 解压成功"
-                else
-                    echo "❌ 错误: 系统缺少 unzip 命令"
-                    echo "💡 请先安装: brew install unzip"
-                    exit 1
-                fi
-            else
-                echo "❌ 下载失败，请检查网络连接或手动下载："
-                echo "   https://github.com/changzhi777/mactools/archive/refs/heads/main.zip"
-                exit 1
-            fi
-        fi
-    else
-        echo "📥 Git 未安装，使用 curl 下载..."
-        if curl -fsSL https://github.com/changzhi777/mactools/archive/refs/heads/main.zip -o mactools.zip 2>/dev/null; then
-            echo "✅ 下载成功，正在解压..."
-
-            if command -v unzip &>/dev/null; then
-                unzip -q mactools.zip
-                mv mactools-main temp_repo
-                echo "✅ 解压成功"
-            else
-                echo "❌ 错误: 系统缺少 unzip 命令"
-                echo "💡 请先安装: brew install unzip"
-                exit 1
-            fi
-        else
-            echo "❌ 下载失败，请检查网络连接或手动下载："
-            echo "   https://github.com/changzhi777/mactools/archive/refs/heads/main.zip"
-            exit 1
-        fi
+    if ! download_project "$TEMP_DIR"; then
+        echo "❌ 项目下载失败"
+        rm -rf "$TEMP_DIR"
+        exit 1
     fi
 
-    SCRIPT_DIR="$TEMP_DIR/temp_repo/macclaw-installer"
+    # 自动检测安装器目录（消除硬编码路径）
+    if [ -d "$TEMP_DIR/temp_repo/macclaw-installer" ]; then
+        SCRIPT_DIR="$TEMP_DIR/temp_repo/macclaw-installer"
+    elif [ -d "$TEMP_DIR/temp_repo" ]; then
+        SCRIPT_DIR="$TEMP_DIR/temp_repo"
+    else
+        echo "❌ 无法找到安装器目录"
+        rm -rf "$TEMP_DIR"
+        exit 1
+    fi
+
     echo "✅ 项目已下载到: $SCRIPT_DIR"
     echo ""
 fi
