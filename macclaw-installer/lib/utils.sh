@@ -10,8 +10,12 @@
 # 说明: 提供通用的工具函数
 #
 
-# 加载日志模块
-source "$(dirname "$0")/logger.sh"
+# 加载日志模块（支持在线安装模式）
+if [ -n "$MACCLAW_LIB_DIR" ]; then
+    source "$MACCLAW_LIB_DIR/logger.sh"
+else
+    source "$(dirname "$0")/logger.sh"
+fi
 
 # 显示欢迎界面
 show_welcome() {

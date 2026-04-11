@@ -79,6 +79,10 @@ if [ ! -d "$SCRIPT_DIR/lib" ]; then
     echo ""
 fi
 
+# 设置库目录环境变量（供库文件互相引用使用）
+export MACCLAW_LIB_DIR="$SCRIPT_DIR/lib"
+export MACCLAW_CONFIG_DIR="$SCRIPT_DIR/config"
+
 # 加载核心模块
 source "$SCRIPT_DIR/lib/logger.sh"
 source "$SCRIPT_DIR/lib/utils.sh"
