@@ -1,0 +1,79 @@
+# Byte-compiled / optimized / object files / etc
+*.pyc
+*.pyo
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Thumbnails
+._*
+
+# Files that might appear in the root of a directory
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Directories potentially created on remote access
+.AppleDB
+.AppleDesktop
+.Trash
+
+# Log files
+*.log
+*.log.*
+
+# npm
+node_modules/
+package-lock.json
+
+# nvm
+.nvm
+.nvmrc
+
+# Homebrew (系统级目录，不应该在项目根目录)
+# 如果在项目根目录安装了 Homebrew，请手动清理
+# /usr/local/
+# /opt/homebrew/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# Project specific
+*.backup
+*.bak
+macclaw-install.log
+macclaw_uninstall.log
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
