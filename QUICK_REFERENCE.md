@@ -3,7 +3,7 @@
 ## 🎯 最简单的一键安装
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/changzhi777/mactools/main/macclaw_install/install.zsh | zsh
+curl -fsSL https://raw.githubusercontent.com/changzhi777/macclaw-installer/main/install.zsh | zsh
 ```
 
 **这就是全部！** 这一条命令将：
@@ -23,7 +23,7 @@ curl -fsSL https://raw.githubusercontent.com/changzhi777/mactools/main/macclaw_i
 ### 1. 标准一键安装（推荐）
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/changzhi777/mactools/main/macclaw_install/install.zsh | zsh
+curl -fsSL https://raw.githubusercontent.com/changzhi777/macclaw-installer/main/install.zsh | zsh
 ```
 
 **特点：**
@@ -37,7 +37,7 @@ curl -fsSL https://raw.githubusercontent.com/changzhi777/mactools/main/macclaw_i
 ### 2. 自动安装（无交互）
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/changzhi777/mactools/main/macclaw_install/install.zsh | zsh -s -- --auto
+curl -fsSL https://raw.githubusercontent.com/changzhi777/macclaw-installer/main/install.zsh | zsh -s -- --auto
 ```
 
 **特点：**
@@ -50,7 +50,7 @@ curl -fsSL https://raw.githubusercontent.com/changzhi777/mactools/main/macclaw_i
 ### 3. 静默安装（最小输出）
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/changzhi777/mactools/main/macclaw_install/install.zsh | zsh -s -- --silent
+curl -fsSL https://raw.githubusercontent.com/changzhi777/macclaw-installer/main/install.zsh | zsh -s -- --silent
 ```
 
 **特点：**
@@ -63,7 +63,7 @@ curl -fsSL https://raw.githubusercontent.com/changzhi777/mactools/main/macclaw_i
 ### 4. 使用 wget
 
 ```bash
-wget -qO- https://raw.githubusercontent.com/changzhi777/mactools/main/macclaw_install/install.zsh | zsh
+wget -qO- https://raw.githubusercontent.com/changzhi777/macclaw-installer/main/install.zsh | zsh
 ```
 
 ---
@@ -72,7 +72,7 @@ wget -qO- https://raw.githubusercontent.com/changzhi777/mactools/main/macclaw_in
 
 ```bash
 # 1. 下载脚本
-curl -fsSL https://raw.githubusercontent.com/changzhi777/mactools/main/macclaw_install/install.zsh -o macclaw-install.zsh
+curl -fsSL https://raw.githubusercontent.com/changzhi777/macclaw-installer/main/install.zsh -o macclaw-install.zsh
 
 # 2. 查看脚本内容（可选）
 cat macclaw-install.zsh
@@ -126,7 +126,7 @@ openclaw --help
 ## 🗑️ 一键卸载
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/changzhi777/mactools/main/macclaw_install/uninstall.zsh | zsh
+curl -fsSL https://raw.githubusercontent.com/changzhi777/macclaw-installer/main/uninstall.zsh | zsh
 ```
 
 ---

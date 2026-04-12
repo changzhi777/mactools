@@ -8,12 +8,12 @@
 ## ⚡ 一键安装（推荐）
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/changzhi777/mactools/main/macclaw_install/install.zsh | zsh
+curl -fsSL https://raw.githubusercontent.com/changzhi777/macclaw-installer/main/install.zsh | zsh
 ```
 
 **或使用 wget：**
 ```bash
-wget -qO- https://raw.githubusercontent.com/changzhi777/mactools/main/macclaw_install/install.zsh | zsh
+wget -qO- https://raw.githubusercontent.com/changzhi777/macclaw-installer/main/install.zsh | zsh
 ```
 
 **🎯 这一条命令即可完成所有安装！**
@@ -153,20 +153,20 @@ sudo rm -rf /Library/Caches/*
 ### 方法 1：一键安装（推荐）
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/changzhi777/mactools/main/macclaw_install/install.zsh | zsh
+curl -fsSL https://raw.githubusercontent.com/changzhi777/macclaw-installer/main/install.zsh | zsh
 ```
 
 或使用 wget：
 
 ```bash
-wget -qO- https://raw.githubusercontent.com/changzhi777/mactools/main/macclaw_install/install.zsh | zsh
+wget -qO- https://raw.githubusercontent.com/changzhi777/macclaw-installer/main/install.zsh | zsh
 ```
 
 ### 方法 2：下载后安装
 
 ```bash
 # 下载脚本
-curl -fsSL https://raw.githubusercontent.com/changzhi777/mactools/main/macclaw_install/install.zsh -o install.zsh
+curl -fsSL https://raw.githubusercontent.com/changzhi777/macclaw-installer/main/install.zsh -o install.zsh
 
 # 添加执行权限
 chmod +x install.zsh

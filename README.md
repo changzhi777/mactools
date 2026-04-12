@@ -11,12 +11,12 @@
 ## ⚡ 一键安装（推荐）
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/changzhi777/mactools/main/macclaw_install/install.zsh | zsh
+curl -fsSL https://raw.githubusercontent.com/changzhi777/macclaw-installer/main/install.zsh | zsh
 ```
 
 **或使用 wget：**
 ```bash
-wget -qO- https://raw.githubusercontent.com/changzhi777/mactools/main/macclaw_install/install.zsh | zsh
+wget -qO- https://raw.githubusercontent.com/changzhi777/macclaw-installer/main/install.zsh | zsh
 ```
 
 **🎯 这一条命令即可完成：**
@@ -75,10 +75,10 @@ MacClaw Install 是一个专为 macOS 设计的一键安装工具，用于快速
 
 ```bash
 # 下载并执行
-curl -fsSL https://raw.githubusercontent.com/changzhi777/mactools/main/macclaw_install/install.zsh | zsh
+curl -fsSL https://raw.githubusercontent.com/changzhi777/macclaw-installer/main/install.zsh | zsh
 
 # 或使用 wget
-wget -qO- https://raw.githubusercontent.com/changzhi777/mactools/main/macclaw_install/install.zsh | zsh
+wget -qO- https://raw.githubusercontent.com/changzhi777/macclaw-installer/main/install.zsh | zsh
 ```
 
 ### 手动安装

@@ -61,7 +61,7 @@ macclaw-installer/
 
 ### 1. 一键安装
 ```bash
-curl -fsSL https://raw.githubusercontent.com/changzhi777/mactools/main/macclaw_install/install.zsh | zsh
+curl -fsSL https://raw.githubusercontent.com/changzhi777/macclaw-installer/main/install.zsh | zsh
 ```
 
 **安装内容：**
@@ -103,7 +103,7 @@ curl -fsSL https://raw.githubusercontent.com/changzhi777/mactools/main/macclaw_i
 
 ### 6. 完整卸载
 ```bash
-curl -fsSL https://raw.githubusercontent.com/changzhi777/mactools/main/macclaw_install/uninstall.zsh | zsh
+curl -fsSL https://raw.githubusercontent.com/changzhi777/macclaw-installer/main/uninstall.zsh | zsh
 ```
 
 ---
