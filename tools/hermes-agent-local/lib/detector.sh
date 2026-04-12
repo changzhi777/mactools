@@ -76,7 +76,7 @@ detect_python() {
         return 1
     fi
 
-    PYTHON_VERSION="$(python3 --version 2>&1 | awk '{print $2}')"
+    PYTHON_VERSION="$(extract_version "python3")"
     local major_minor="$(echo "$PYTHON_VERSION" | awk -F. '{print $1"."$2}')"
 
     log_debug "Python 版本: $PYTHON_VERSION"
@@ -107,7 +107,7 @@ detect_uv() {
         return 1
     fi
 
-    local uv_version="$(uv --version 2>&1 | awk '{print $2}')"
+    local uv_version="$(extract_version "uv" "2")"
     log_success "uv 版本: $uv_version ✓"
     UV_AVAILABLE=true
     return 0
@@ -126,7 +126,7 @@ detect_git() {
         return 1
     fi
 
-    local git_version="$(git --version 2>&1 | awk '{print $3}')"
+    local git_version="$(extract_version "git" "3")"
     log_success "Git 版本: $git_version ✓"
     GIT_AVAILABLE=true
     return 0
@@ -145,7 +145,7 @@ detect_nodejs() {
         return 0
     fi
 
-    NODE_VERSION="$(node --version 2>&1)"
+    NODE_VERSION="$(extract_version "node")"
     log_info "Node.js 版本: $NODE_VERSION (可选)"
     return 0
 }

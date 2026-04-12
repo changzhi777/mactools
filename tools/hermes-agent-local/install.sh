@@ -304,10 +304,28 @@ clone_repository() {
     if [ -d "$INSTALL_DIR" ]; then
         if ask_yes_no "安装目录已存在，是否更新？"; then
             log_info "更新现有安装..."
-            cd "$INSTALL_DIR"
-            git fetch origin
-            git checkout "$REPO_BRANCH"
-            git pull origin "$REPO_BRANCH"
+
+            if ! cd "$INSTALL_DIR"; then
+                log_error "无法进入安装目录: $INSTALL_DIR"
+                exit 1
+            fi
+
+            if ! git fetch origin; then
+                log_error "Git fetch 失败"
+                exit 1
+            fi
+
+            if ! git checkout "$REPO_BRANCH"; then
+                log_error "Git checkout 失败: $REPO_BRANCH"
+                exit 1
+            fi
+
+            if ! git pull origin "$REPO_BRANCH"; then
+                log_error "Git pull 失败"
+                exit 1
+            fi
+
+            log_success "仓库更新成功"
         else
             log_warning "跳过仓库克隆"
         fi
@@ -319,11 +337,16 @@ clone_repository() {
     log_info "分支: $REPO_BRANCH"
     log_info "目标目录: $INSTALL_DIR"
 
-    if git clone -b "$REPO_BRANCH" "$REPO_URL" "$INSTALL_DIR"; then
-        log_success "仓库克隆成功"
-        cd "$INSTALL_DIR"
-    else
+    if ! git clone -b "$REPO_BRANCH" "$REPO_URL" "$INSTALL_DIR"; then
         log_error "仓库克隆失败"
+        log_info "请检查网络连接和仓库地址"
+        exit 1
+    fi
+
+    log_success "仓库克隆成功"
+
+    if ! cd "$INSTALL_DIR"; then
+        log_error "无法进入安装目录: $INSTALL_DIR"
         exit 1
     fi
 }
@@ -335,19 +358,37 @@ clone_repository() {
 install_python_packages() {
     log_step "安装 Python 依赖"
 
-    cd "$INSTALL_DIR"
+    if ! cd "$INSTALL_DIR"; then
+        log_error "无法进入安装目录: $INSTALL_DIR"
+        exit 1
+    fi
 
     if is_termux; then
         # Termux 使用标准 venv
         log_info "创建虚拟环境..."
-        python -m venv .venv
-        source .venv/bin/activate
+        if ! python -m venv .venv; then
+            log_error "虚拟环境创建失败"
+            exit 1
+        fi
+
+        if ! source .venv/bin/activate; then
+            log_error "虚拟环境激活失败"
+            exit 1
+        fi
+
         log_info "安装依赖包..."
-        pip install -e .[cli]
+        if ! pip install -e .[cli]; then
+            log_error "依赖包安装失败"
+            exit 1
+        fi
     else
         # 使用 uv 安装
         log_info "使用 uv 安装依赖..."
-        $UV_CMD sync --extra cli
+        if ! $UV_CMD sync --extra cli; then
+            log_error "依赖安装失败"
+            log_info "请检查网络连接和 Python 版本"
+            exit 1
+        fi
     fi
 
     log_success "依赖安装完成"
@@ -361,21 +402,32 @@ setup_environment() {
     log_step "配置环境"
 
     # 确保 bin 目录存在
-    mkdir -p "$BIN_DIR"
+    if ! mkdir -p "$BIN_DIR"; then
+        log_error "无法创建 bin 目录: $BIN_DIR"
+        exit 1
+    fi
 
     # 创建符号链接
     local hermes_link="$BIN_DIR/hermes"
+    local hermes_target="$INSTALL_DIR/.venv/bin/hermes"
 
-    if [ -L "$hermes_link" ]; then
-        log_info "更新现有符号链接"
-        rm "$hermes_link"
+    # 检查目标是否存在
+    if [ ! -e "$hermes_target" ]; then
+        log_error "hermes 可执行文件不存在: $hermes_target"
+        log_info "请检查虚拟环境是否正确安装"
+        exit 1
     fi
 
-    # 创建链接
-    if is_termux; then
-        ln -sf "$INSTALL_DIR/.venv/bin/hermes" "$hermes_link"
-    else
-        ln -sf "$INSTALL_DIR/.venv/bin/hermes" "$hermes_link"
+    # 删除现有链接（如果存在）
+    if [ -L "$hermes_link" ]; then
+        log_info "删除现有符号链接"
+        rm -f "$hermes_link"
+    fi
+
+    # 创建新链接
+    if ! ln -sf "$hermes_target" "$hermes_link"; then
+        log_error "符号链接创建失败"
+        exit 1
     fi
 
     log_success "符号链接已创建: $hermes_link"

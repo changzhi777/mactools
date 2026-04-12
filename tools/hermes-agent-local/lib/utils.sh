@@ -21,6 +21,20 @@ source "${LIB_DIR}/logger.sh"
 # 版本比较
 # ============================================================================
 
+# 提取命令版本号
+# 参数: $1=命令名, $2=字段索引(默认2)
+# 返回: 版本号字符串
+extract_version() {
+    local cmd="$1"
+    local field="${2:-2}"
+
+    if ! command -v "$cmd" &>/dev/null; then
+        return 1
+    fi
+
+    $cmd --version 2>&1 | awk -v f="$field" '{print $f}'
+}
+
 # 比较两个版本号
 # 返回: 0=相等, 1=版本1>版本2, 2=版本1<版本2
 version_compare() {
