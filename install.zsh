@@ -52,6 +52,137 @@ LIB_DIR="${SCRIPT_DIR}/lib"
 CONFIG_DIR="${SCRIPT_DIR}/config"
 
 # ==============================================================================
+# 一键安装自举机制（Bootstrap）
+# ==============================================================================
+
+# 检测是否在正确的目录下运行
+if [[ ! -f "${LIB_DIR}/core/logger.zsh" ]]; then
+    # 不在正确的目录，需要下载完整仓库
+    REPO_URL="https://github.com/changzhi777/macclaw-installer.git"
+    TEMP_DIR="${HOME}/.macclaw_installer_tmp"
+
+    echo "🔄 检测到需要下载完整安装包..."
+    echo "📦 临时目录：${TEMP_DIR}"
+
+    # 删除旧的临时目录（如果存在）
+    if [[ -d "${TEMP_DIR}" ]]; then
+        echo "🧹 清理旧的临时文件..."
+        rm -rf "${TEMP_DIR}"
+    fi
+
+    # 下载仓库
+    echo "⬇️  正在下载 MacClaw Installer..."
+    if command -v git &> /dev/null; then
+        # 使用 git clone（更快，支持增量更新）
+        git clone --depth 1 "${REPO_URL}" "${TEMP_DIR}" 2>/dev/null || {
+            echo "❌ Git clone 失败，尝试使用 curl 下载..."
+            bootstrap_fallback_curl
+        }
+    else
+        # 使用 curl 下载（需要 git 不可用时）
+        bootstrap_fallback_curl
+    fi
+
+    # 检查下载是否成功
+    if [[ ! -f "${TEMP_DIR}/install.zsh" ]]; then
+        echo "❌ 下载失败！请检查网络连接或手动下载："
+        echo "   ${REPO_URL}"
+        exit 1
+    fi
+
+    echo "✅ 下载完成！"
+    echo ""
+
+    # 切换到临时目录并重新执行脚本
+    cd "${TEMP_DIR}"
+    exec zsh install.zsh "$@"
+fi
+
+# ==============================================================================
+# 辅助函数（备用下载方法）
+# ==============================================================================
+
+# 使用 curl 下载单个文件（备用方案）
+bootstrap_fallback_curl() {
+    mkdir -p "${TEMP_DIR}"
+
+    # 下载主要文件
+    echo "📥 下载核心文件..."
+
+    # 下载 install.zsh
+    curl -fsSL "https://raw.githubusercontent.com/changzhi777/macclaw-installer/main/install.zsh" -o "${TEMP_DIR}/install.zsh" || {
+        echo "❌ 无法下载 install.zsh"
+        exit 1
+    }
+
+    # 创建必要的目录结构
+    mkdir -p "${TEMP_DIR}/lib/core"
+    mkdir -p "${TEMP_DIR}/lib/parts"
+    mkdir -p "${TEMP_DIR}/lib/sources"
+    mkdir -p "${TEMP_DIR}/config"
+    mkdir -p "${TEMP_DIR}/scripts"
+    mkdir -p "${TEMP_DIR}/tests"
+
+    # 下载核心模块
+    local core_modules=(
+        "logger.zsh"
+        "utils.zsh"
+        "detector.zsh"
+        "validator.zsh"
+        "error-handler.zsh"
+    )
+
+    for module in "${core_modules[@]}"; do
+        echo "  📄 下载 ${module}..."
+        curl -fsSL "https://raw.githubusercontent.com/changzhi777/macclaw-installer/main/lib/core/${module}" \
+            -o "${TEMP_DIR}/lib/core/${module}" 2>/dev/null || echo "  ⚠️  警告：${module} 下载失败"
+    done
+
+    # 下载安装部分
+    local part_modules=(
+        "part1_env.zsh"
+        "part2_compute.zsh"
+        "part3_openclaw.zsh"
+        "part4_test_plugins.zsh"
+    )
+
+    for module in "${part_modules[@]}"; do
+        echo "  📄 下载 ${module}..."
+        curl -fsSL "https://raw.githubusercontent.com/changzhi777/macclaw-installer/main/lib/parts/${module}" \
+            -o "${TEMP_DIR}/lib/parts/${module}" 2>/dev/null || echo "  ⚠️  警告：${module} 下载失败"
+    done
+
+    # 下载配置文件
+    local config_files=(
+        "sources.conf"
+        "versions.conf"
+        "plugins.conf"
+        "compute.conf"
+    )
+
+    for config in "${config_files[@]}"; do
+        echo "  📄 下载 ${config}..."
+        curl -fsSL "https://raw.githubusercontent.com/changzhi777/macclaw-installer/main/config/${config}" \
+            -o "${TEMP_DIR}/config/${config}" 2>/dev/null || echo "  ⚠️  警告：${config} 下载失败"
+    done
+
+    # 下载国内源配置
+    local source_modules=(
+        "homebrew.zsh"
+        "nodejs.zsh"
+        "openclaw.zsh"
+    )
+
+    for module in "${source_modules[@]}"; do
+        echo "  📄 下载 ${module}..."
+        curl -fsSL "https://raw.githubusercontent.com/changzhi777/macclaw-installer/main/lib/sources/${module}" \
+            -o "${TEMP_DIR}/lib/sources/${module}" 2>/dev/null || echo "  ⚠️  警告：${module} 下载失败"
+    done
+
+    echo "✅ 核心文件下载完成！"
+}
+
+# ==============================================================================
 # 全局变量
 # ==============================================================================
 
