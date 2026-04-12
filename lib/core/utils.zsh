@@ -107,11 +107,11 @@ print_step() {
     local step="$1"
     local total="$2"
     local message="$3"
-    local status="${4:-pending}"
+    local step_status="${4:-pending}"
 
     local step_num="(${step}/${total})"
 
-    case "${status}" in
+    case "${step_status}" in
         pending)
             echo -e "${COLOR_CYAN}⏳${COLOR_NC} ${step_num} ${message}"
             ;;

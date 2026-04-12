@@ -261,10 +261,10 @@ log_section() {
 
 # 列表项
 log_list_item() {
-    local status="$1"
+    local item_status="$1"
     local message="$2"
 
-    case "${status}" in
+    case "${item_status}" in
         success)
             echo -e "  ${COLOR_GREEN}${ICON_SUCCESS}${COLOR_NC} ${message}"
             echo "  [✓] ${message}" >> "${LOG_FILE}"
