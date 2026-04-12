@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  # HBBS - RustDesk ID 服务器
+  hbbs:
+    image: rustdesk/rustdesk-server:latest
+    container_name: rustdesk-hbbs
+    command: hbbs
+    # 使用 host 网络模式（Linux 推荐）
+    network_mode: "host"
+    # 环境变量（从 .env 文件读取）
+    env_file:
+      - .env
+    environment:
+      # 强制使用中继（可选）
+      - ALWAYS_USE_RELAY=${ALWAYS_USE_RELAY:-N}
+      # 密钥长度
+      - KEY_LEN=${KEY_LEN:-32}
+      # 端口偏移量
+      - PORT_OFFSET=${PORT_OFFSET:-0}
+    volumes:
+      # 持久化数据目录（存储密钥和配置）
+      - ./data:/root
+    restart: unless-stopped
+    depends_on:
+      - hbbr
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "21114"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # HBBR - RustDesk 中继服务器
+  hbbr:
+    image: rustdesk/rustdesk-server:latest
+    container_name: rustdesk-hbbr
+    command: hbbr
+    # 使用 host 网络模式（Linux 推荐）
+    network_mode: "host"
+    # 环境变量（从 .env 文件读取）
+    env_file:
+      - .env
+    environment:
+      # 密钥长度
+      - KEY_LEN=${KEY_LEN:-32}
+      # 端口偏移量
+      - PORT_OFFSET=${PORT_OFFSET:-0}
+    volumes:
+      # 持久化数据目录（存储密钥和配置）
+      - ./data:/root
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "21117"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+# 如不使用 host 网络模式（非 Linux 系统），可以使用以下配置：
+# services:
+#   hbbs:
+#     image: rustdesk/rustdesk-server:latest
+#     container_name: rustdesk-hbbs
+#     command: hbbs
+#     ports:
+#       - "21114:21114"  # Web 控制台（Pro 版本）
+#       - "21115:21115"  # NAT 测试
+#       - "21116:21116"  # ID 注册和心跳
+#       - "21116:21116/udp"  # ID 注册和心跳（UDP）
+#       - "21118:21118"  # Web 客户端支持
+#     volumes:
+#       - ./data:/root
+#     restart: unless-stopped
+#
+#   hbbr:
+#     image: rustdesk/rustdesk-server:latest
+#     container_name: rustdesk-hbbr
+#     command: hbbr
+#     ports:
+#       - "21117:21117"  # 中继服务
+#       - "21119:21119"  # Web 客户端支持
+#     volumes:
+#       - ./data:/root
+#     restart: unless-stopped
