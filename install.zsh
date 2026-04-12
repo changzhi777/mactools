@@ -255,17 +255,19 @@ ${COLOR_WHITE}用法：${COLOR_NC}
 
 ${COLOR_WHITE}选项：${COLOR_NC}
   --auto       自动安装模式（无交互）
-  --silent     静默模式（最小输出）
+  --silent     静默模式（只显示错误）
+  --verbose    详细模式（显示所有日志）
   --help       显示此帮助信息
 
 ${COLOR_WHITE}示例：${COLOR_NC}
-  $0              # 交互式安装
-  $0 --auto       # 自动安装
-  $0 --silent     # 静默安装
+  $0              # 交互式安装（简洁输出）
+  $0 --auto       # 自动安装（简洁输出）
+  $0 --silent     # 静默安装（只显示错误）
+  $0 --verbose    # 详细安装（显示所有日志）
 
 ${COLOR_WHITE}更多信息：${COLOR_NC}
-  项目主页：https://github.com/changzhi777/mactools
-  文档：https://github.com/changzhi777/mactools/blob/main/macclaw_install/README.md
+  项目主页：https://github.com/changzhi777/macclaw-installer
+  文档：https://github.com/changzhi777/macclaw-installer/blob/main/README.md
 
 EOF
 }
@@ -280,6 +282,12 @@ parse_arguments() {
                 ;;
             --silent)
                 INSTALL_MODE="silent"
+                OUTPUT_MODE="silent"
+                shift
+                ;;
+            --verbose)
+                OUTPUT_MODE="verbose"
+                CURRENT_LOG_LEVEL=${LOG_LEVEL_DEBUG}
                 shift
                 ;;
             --help|-h)
@@ -373,16 +381,16 @@ quick_install() {
     echo ""
 
     if confirm_action "确认开始快速安装？"; then
-        log_info "🚀 开始快速安装..."
+        log_step "开始安装 OpenClaw + oMLX 本地 AI 环境"
         echo ""
 
         # 执行所有安装步骤
         run_all_steps
 
-        log_success "🎉 快速安装完成！"
+        log_complete "安装完成！"
         show_completion_info
     else
-        log_info "已取消安装"
+        echo "已取消安装"
     fi
 
     press_enter_continue
@@ -587,21 +595,22 @@ run_all_steps() {
         ((current++))
         local step_name="${STEP_NAMES[${step}]}"
 
-        print_step ${current} ${total} "${step_name}" running
+        log_step "第 ${current}/${total} 步" "${step_name}"
 
         if run_step "${step}"; then
-            print_step ${current} ${total} "${step_name}" success
+            log_complete "${step_name} 完成"
         else
-            print_step ${current} ${total} "${step_name}" error
+            echo -e "${COLOR_RED}✗${COLOR_NC} ${step_name} 失败"
 
             # 询问是否继续
             if [[ "${INSTALL_MODE}" != "auto" ]]; then
                 if ! confirm_action "${step_name} 失败，是否继续？"; then
-                    log_error "安装已取消"
+                    echo "安装已取消" >&2
                     return 1
                 fi
             fi
         fi
+        echo ""
     done
 
     return 0
@@ -711,12 +720,12 @@ main() {
     # 根据模式执行
     case "${INSTALL_MODE}" in
         auto)
-            log_info "自动安装模式"
+            echo "🚀 自动安装模式"
             run_all_steps
             show_completion_info
             ;;
         silent)
-            log_info "静默安装模式"
+            # 静默模式不输出任何信息
             run_all_steps
             ;;
         interactive|*)

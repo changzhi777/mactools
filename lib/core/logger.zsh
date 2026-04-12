@@ -30,16 +30,21 @@ typeset -g LOG_LEVEL_INFO=1
 typeset -g LOG_LEVEL_SUCCESS=2
 typeset -g LOG_LEVEL_WARNING=3
 typeset -g LOG_LEVEL_ERROR=4
+typeset -g LOG_LEVEL_MINIMAL=5  # 简洁模式：只显示关键步骤和错误
+
+# 输出模式：minimal（简洁，默认）| verbose（详细）| silent（静默）
+typeset -g OUTPUT_MODE="minimal"
 
 # 当前日志级别（可通过环境变量 LOG_LEVEL 设置）
-typeset -g CURRENT_LOG_LEVEL=${LOG_LEVEL_INFO}
+typeset -g CURRENT_LOG_LEVEL=${LOG_LEVEL_MINIMAL}  # 默认简洁模式
 if [[ -n "${LOG_LEVEL}" ]]; then
     case "${LOG_LEVEL}" in
-        DEBUG|debug)   CURRENT_LOG_LEVEL=${LOG_LEVEL_DEBUG} ;;
-        INFO|info)     CURRENT_LOG_LEVEL=${LOG_LEVEL_INFO} ;;
+        DEBUG|debug)   CURRENT_LOG_LEVEL=${LOG_LEVEL_DEBUG}; OUTPUT_MODE="verbose" ;;
+        INFO|info)     CURRENT_LOG_LEVEL=${LOG_LEVEL_INFO}; OUTPUT_MODE="verbose" ;;
         SUCCESS|success) CURRENT_LOG_LEVEL=${LOG_LEVEL_SUCCESS} ;;
         WARNING|warning) CURRENT_LOG_LEVEL=${LOG_LEVEL_WARNING} ;;
         ERROR|error)   CURRENT_LOG_LEVEL=${LOG_LEVEL_ERROR} ;;
+        MINIMAL|minimal) CURRENT_LOG_LEVEL=${LOG_LEVEL_MINIMAL}; OUTPUT_MODE="minimal" ;;
     esac
 fi
 
@@ -152,6 +157,59 @@ log_error() {
         echo -e "${COLOR_RED}[ERROR]${COLOR_NC} ${ICON_ERROR} ${message}" >&2
         _log_write "ERROR" "${message}"
     fi
+}
+
+# ==============================================================================
+# 简洁模式日志函数（只在简洁和详细模式下显示）
+# ==============================================================================
+
+# 关键步骤（简洁模式专用）
+log_step() {
+    local step="$1"
+    local detail="${2:-}"
+
+    # 总是显示步骤信息（在所有非静默模式下）
+    if [[ "${OUTPUT_MODE}" != "silent" ]]; then
+        if [[ -n "${detail}" ]]; then
+            echo -e "${COLOR_CYAN}▶${COLOR_NC} ${step} - ${detail}"
+        else
+            echo -e "${COLOR_CYAN}▶${COLOR_NC} ${step}"
+        fi
+    fi
+    _log_write "STEP" "${step}: ${detail}"
+}
+
+# 进度信息（简洁模式专用）
+log_progress() {
+    local message="$*"
+
+    # 只在详细模式下显示详细进度
+    if [[ "${OUTPUT_MODE}" == "verbose" ]]; then
+        echo -e "${COLOR_GRAY}  ${message}${COLOR_NC}"
+    fi
+    _log_write "PROGRESS" "${message}"
+}
+
+# 完成信息（简洁模式专用）
+log_complete() {
+    local message="$*"
+
+    # 总是显示完成信息（在所有非静默模式下）
+    if [[ "${OUTPUT_MODE}" != "silent" ]]; then
+        echo -e "${COLOR_GREEN}✓${COLOR_NC} ${message}"
+    fi
+    _log_write "COMPLETE" "${message}"
+}
+
+# 跳过信息（简洁模式专用）
+log_skip() {
+    local message="$*"
+
+    # 只在详细模式下显示跳过信息
+    if [[ "${OUTPUT_MODE}" == "verbose" ]]; then
+        echo -e "${COLOR_YELLOW}⊘${COLOR_NC} ${message}"
+    fi
+    _log_write "SKIP" "${message}"
 }
 
 # 空行
