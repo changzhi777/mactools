@@ -776,8 +776,38 @@ optimize_omlx_performance() {
             echo "  2. 或重启 oMLX 应用"
             echo ""
 
-            echo -n "重启完成后，按 Enter 继续..."
-            read
+            # 检测是否为非交互模式
+            if [[ ! -t 0 ]]; then
+                echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+                echo -e "${CYAN}  📋 重要提醒（非交互模式）${NC}"
+                echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+                echo ""
+                echo -e "${WHITE}⚠️  oMLX 性能优化已完成，但需要重启服务才能生效！${NC}"
+                echo ""
+                echo -e "${YELLOW}🔄 请按以下步骤重启 oMLX 服务：${NC}"
+                echo ""
+                echo "  方式1（推荐）："
+                echo "    1. 打开 oMLX 应用"
+                echo "    2. 点击 '重启服务' 按钮"
+                echo ""
+                echo "  方式2："
+                echo "    1. 完全退出 oMLX 应用"
+                echo "    2. 重新启动 oMLX 应用"
+                echo ""
+                echo -e "${GREEN}✅ 重启后，新的性能配置将自动生效${NC}"
+                echo -e "${GREEN}✅ 并发请求将提升至: 12${NC}"
+                echo -e "${GREEN}✅ 缓存块将提升至: 384${NC}"
+                echo ""
+                echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+                echo ""
+                echo -e "${WHITE}💡 安装脚本将继续执行后续步骤...${NC}"
+                echo ""
+                # 短暂延迟，让用户看到提醒
+                sleep 3
+            else
+                echo -n "重启完成后，按 Enter 继续..."
+                read
+            fi
 
             # 验证配置
             log_info "验证新配置..."
@@ -1295,6 +1325,56 @@ main() {
     echo ""
     echo "📝 日志文件: ${LOG_FILE}"
     echo ""
+
+    # 检测是否为非交互模式，显示额外提醒
+    if [[ ! -t 0 ]]; then
+        echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo -e "${CYAN}  📋 后续操作提醒${NC}"
+        echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo ""
+        echo -e "${WHITE}✅ 安装已完成，但请完成以下步骤以获得最佳体验：${NC}"
+        echo ""
+
+        # 检查是否进行了oMLX性能优化
+        if [[ -f "${HOME}/.omlx/settings.json.backup" ]]; then
+            echo -e "${YELLOW}🔄 1. 重启 oMLX 服务（重要！）${NC}"
+            echo ""
+            echo "   性能优化已完成，需要重启才能生效："
+            echo "   • 打开 oMLX 应用"
+            echo "   • 点击 '重启服务' 按钮"
+            echo "   • 或完全重启 oMLX 应用"
+            echo ""
+            echo -e "${GREEN}   重启后性能提升：${NC}"
+            echo "   • 并发请求: 8 → 12"
+            echo "   • 缓存块: 256 → 384"
+            echo ""
+        fi
+
+        echo -e "${YELLOW}🤖 2. 开始使用 BB小子 Agent${NC}"
+        echo ""
+        echo "   切换到 BB小子："
+        echo "   ${CYAN}openclaw agents use bb-kid${NC}"
+        echo ""
+        echo "   开始对话："
+        echo "   ${CYAN}openclaw chat '你好，BB小子'${NC}"
+        echo ""
+
+        echo -e "${YELLOW}🥋 3. BB小子 健康提醒功能${NC}"
+        echo ""
+        echo "   收集科技新闻（含健康提醒）："
+        echo "   ${CYAN}~/.openclaw/workspaces/bb-kid/skills/news-collector-bruce.zsh collect tech 3${NC}"
+        echo ""
+        echo "   创建提醒事项："
+        echo "   ${CYAN}~/.openclaw/workspaces/bb-kid/skills/macos-reminders-bruce.zsh create '功夫训练' '18:00' '今日练习'${NC}"
+        echo ""
+        echo "   智能健康提醒："
+        echo "   ${CYAN}bash ~/.openclaw/workspaces/bb-kid/skills/bruce-lee-reminders.sh smart${NC}"
+        echo ""
+
+        echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo ""
+    fi
+
     echo "🚀 快速开始："
     echo ""
     echo "  # 测试本地推理"
@@ -1326,6 +1406,20 @@ main() {
     echo "  # 查看模型状态"
     echo "  openclaw models status"
     echo ""
+
+    # 非交互模式的最终提醒
+    if [[ ! -t 0 ]]; then
+        echo ""
+        echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo -e "${WHITE}🥋 '知道不够，必须做到。'${NC}"
+        echo -e "${WHITE}🥋 'Be water, my friend.'${NC}"
+        echo ""
+        echo -e "${GREEN}✅ 一键安装完成！BB小子 Agent已就绪！${NC}"
+        echo -e "${GREEN}✅ 请按照上述步骤完成后续配置${NC}"
+        echo ""
+        echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo ""
+    fi
 }
 
 # 运行主函数
