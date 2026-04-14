@@ -530,13 +530,22 @@ test_model() {
     log_info "测试 OpenClaw 推理功能..."
     log_info "使用模型: omlx/gemma-4-e4b-it-4bit"
 
-    # 测试推理
-    if openclaw infer model run --model omlx/gemma-4-e4b-it-4bit --prompt "你好" 2>&1 | tee -a "${LOG_FILE}"; then
+    # 测试推理（使用 || true 确保即使失败也继续执行）
+    local test_output=$(openclaw infer model run --model omlx/gemma-4-e4b-it-4bit --prompt "你好" 2>&1)
+    local test_exit_code=$?
+
+    # 记录测试输出
+    echo "${test_output}" | tee -a "${LOG_FILE}" >/dev/null
+
+    if [[ ${test_exit_code} -eq 0 ]]; then
         log_success "模型测试成功！"
     else
         log_warning "模型测试失败，但这不影响后续使用"
         log_info "您可以稍后手动测试: openclaw infer model run --model omlx/gemma-4-e4b-it-4bit --prompt '你好'"
     fi
+
+    # 无论测试结果如何，都继续执行
+    return 0
 }
 
 # ==============================================================================
@@ -572,71 +581,70 @@ configure_omlx_local() {
     # 检查 OpenClaw 是否已配置 oMLX
     if openclaw config get agents.defaults.model.primary 2>/dev/null | grep -q "omlx"; then
         log_success "oMLX 本地算力已配置"
-        return 0
-    fi
-
-    echo ""
-    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${CYAN}  oMLX 本地算力配置${NC}"
-    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo ""
-    echo -e "${WHITE}检测到：${NC}"
-    echo "  • oMLX 应用: /Applications/oMLX.app"
-    echo "  • OpenClaw: $(openclaw --version 2>&1 | head -1)"
-    echo ""
-    echo -e "${YELLOW}是否配置 OpenClaw 使用本地 oMLX 推理？${NC}"
-    echo "  1) 是 - 配置 oMLX 作为默认推理引擎"
-    echo "  2) 否 - 跳过配置"
-    echo ""
-
-    # 检测是否为非交互模式（管道安装）
-    if [[ ! -t 0 ]]; then
-        echo -e "${CYAN}[自动选择] 是 - 配置 oMLX 作为默认推理引擎${NC}"
-        choice="1"
+        # 继续执行，不返回
     else
-        echo -n "请选择 [1-2]: "
-        read choice
+        echo ""
+        echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo -e "${CYAN}  oMLX 本地算力配置${NC}"
+        echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo ""
+        echo -e "${WHITE}检测到：${NC}"
+        echo "  • oMLX 应用: /Applications/oMLX.app"
+        echo "  • OpenClaw: $(openclaw --version 2>&1 | head -1)"
+        echo ""
+        echo -e "${YELLOW}是否配置 OpenClaw 使用本地 oMLX 推理？${NC}"
+        echo "  1) 是 - 配置 oMLX 作为默认推理引擎"
+        echo "  2) 否 - 跳过配置"
+        echo ""
+
+        # 检测是否为非交互模式（管道安装）
+        if [[ ! -t 0 ]]; then
+            echo -e "${CYAN}[自动选择] 是 - 配置 oMLX 作为默认推理引擎${NC}"
+            choice="1"
+        else
+            echo -n "请选择 [1-2]: "
+            read choice
+        fi
+        echo ""
+
+        case "${choice}" in
+            1|"yes"|"y"|"Y"|"是")
+                log_info "正在配置 oMLX 本地算力..."
+
+                # 配置 oMLX 为默认模型
+                if openclaw config set agents.defaults.model.primary "omlx/gemma-4-e4b-it-4bit" 2>&1 | tee -a "${LOG_FILE}"; then
+                    log_success "oMLX 配置成功"
+                    log_info "默认模型已设置为: omlx/gemma-4-e4b-it-4bit"
+                else
+                    log_warning "配置失败，请手动配置"
+                    log_info "手动配置命令："
+                    echo "  openclaw config set agents.defaults.model.primary omlx/gemma-4-e4b-it-4bit"
+                    # 不返回1，改为返回0继续执行
+                fi
+
+                # 验证配置
+                log_info "验证配置..."
+                local configured_model=$(openclaw config get agents.defaults.model.primary 2>/dev/null)
+                if [[ "${configured_model}" == *"omlx"* ]]; then
+                    log_success "✅ oMLX 本地算力配置成功！"
+                    log_info "OpenClaw 现在使用本地 oMLX 进行推理"
+                else
+                    log_warning "配置验证失败，但继续执行后续步骤"
+                fi
+                ;;
+
+            2|"no"|"n"|"N"|"否")
+                log_info "跳过 oMLX 本地算力配置"
+                ;;
+
+            *)
+                log_warning "无效选择，跳过配置"
+                ;;
+        esac
     fi
-    echo ""
 
-    case "${choice}" in
-        1|"yes"|"y"|"Y"|"是")
-            log_info "正在配置 oMLX 本地算力..."
-
-            # 配置 oMLX 为默认模型
-            if openclaw config set agents.defaults.model.primary "omlx/gemma-4-e4b-it-4bit" 2>&1 | tee -a "${LOG_FILE}"; then
-                log_success "oMLX 配置成功"
-                log_info "默认模型已设置为: omlx/gemma-4-e4b-it-4bit"
-            else
-                log_warning "配置失败，请手动配置"
-                log_info "手动配置命令："
-                echo "  openclaw config set agents.defaults.model.primary omlx/gemma-4-e4b-it-4bit"
-                return 1
-            fi
-
-            # 验证配置
-            log_info "验证配置..."
-            local configured_model=$(openclaw config get agents.defaults.model.primary 2>/dev/null)
-            if [[ "${configured_model}" == *"omlx"* ]]; then
-                log_success "✅ oMLX 本地算力配置成功！"
-                log_info "OpenClaw 现在使用本地 oMLX 进行推理"
-                return 0
-            else
-                log_warning "配置验证失败"
-                return 1
-            fi
-            ;;
-
-        2|"no"|"n"|"N"|"否")
-            log_info "跳过 oMLX 本地算力配置"
-            return 0
-            ;;
-
-        *)
-            log_warning "无效选择，跳过配置"
-            return 0
-            ;;
-    esac
+    # 无论配置结果如何，都返回0继续执行
+    return 0
 }
 
 # ==============================================================================
@@ -1257,23 +1265,23 @@ main() {
     echo ""
 
     # 系统检测
-    detect_system
+    detect_system || true
 
     # 组件检测
-    detect_components
+    detect_components || true
 
     # 安装组件
-    install_homebrew
-    install_nodejs
-    install_openclaw
-    install_omlx
-    test_model
+    install_homebrew || true
+    install_nodejs || true
+    install_openclaw || true
+    install_omlx || true
+    test_model || true
 
-    # 高级功能
-    configure_omlx_local
-    optimize_omlx_performance
-    install_plugins
-    create_agents
+    # 高级功能（确保即使失败也继续执行）
+    configure_omlx_local || true
+    optimize_omlx_performance || true
+    install_plugins || true
+    create_agents || true
 
     # 最终检测
     log_section "安装完成"
