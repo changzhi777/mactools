@@ -1,11 +1,12 @@
 # MacClaw Install 🦞
 
-**一键安装 OpenClaw + oMLX 本地 AI 环境 + BB小子智能助手**
+**一键安装 OpenClaw + 智能双模型配置（智谱AI + 本地模型） + BB小子智能助手**
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-2.0.0-green.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-2.1.0-green.svg)](CHANGELOG.md)
 [![macOS](https://img.shields.io/badge/macOS-12%2B-blue.svg)](https://www.apple.com/macosx/)
 [![Tests](https://img.shields.io/badge/tests-26%2F26%20passing-brightgreen.svg)](TEST_REPORT.md)
+[![Dual Model](https://img.shields.io/badge/models-zhipuai%20AI%20%2B%20omlx-orange.svg)](README.md#智能双模型配置)
 
 ---
 
@@ -59,6 +60,9 @@ MacClaw Install 是一个专为 macOS 设计的一键安装工具，用于快速
 
 ### ✨ 核心特性
 
+- 🧠 **智能双模型配置** - 智谱AI云端（快6-10倍）+ 本地模型（高可用）
+- 🔄 **自动降级机制** - API故障时自动切换到本地，无感知
+- 👁️ **视觉理解能力** - GLM-5V-Turbo 支持图像分析和OCR
 - 🚀 **一键安装** - 自动安装所有必要组件
 - 🇨🇳 **国内源优化** - 使用国内镜像源，下载速度更快
 - 🤖 **BB小子 Agent** - 李小龙风格智能助手，开箱即用
@@ -178,6 +182,8 @@ bash ~/.openclaw/workspaces/bb-kid/skills/bruce-lee-reminders.sh smart
 - ✅ **OpenClaw CLI** - 本地 AI Agent 框架
 - ✅ **oMLX** - Apple Silicon 优化推理引擎
 - ✅ **gemma-4-e4b-it-4bit** - 本地 AI 模型（约 4GB）
+- ✅ **zhipuai/glm-5.1** - 智谱AI云端模型（主模型）
+- ✅ **glm-5v-turbo** - 智谱AI视觉模型（图像理解）
 
 ### BB小子 Agent 配置
 
@@ -230,6 +236,78 @@ openclaw --help
 bash ~/.openclaw/workspaces/bb-kid/skills/bruce-lee-reminders.sh smart
 ```
 
+### 智能双模型配置
+
+#### 🧠 双模型架构说明
+
+**主模型（云端）：** 智谱 AI GLM-5.1
+- ⚡ **速度：** 2-3秒响应（比本地快6-10倍）
+- 🧠 **智能度：** 更强的理解和推理能力
+- 🔧 **工具支持：** 支持函数调用和复杂任务
+
+**备用模型（本地）：** oMLX Gemma-4 4bit
+- 🛡️ **高可用：** API故障时自动降级
+- 💰 **免费：** 无API调用成本
+- 🔒 **隐私：** 数据不出本地
+
+**视觉模型：** GLM-5V-Turbo
+- 👁️ **图像理解：** 支持图像描述和分析
+- 🔍 **OCR功能：** 提取图片中的文字
+- 📊 **图表分析：** 理解数据图表和趋势
+
+#### 配置和使用
+
+```bash
+# 方式1：使用交互式菜单（推荐）
+cd macclaw_install
+./install.zsh
+# 选择：7) 🧠 智能双模型配置（云端+本地）
+
+# 方式2：手动配置
+# 设置主模型为智谱AI
+openclaw config set agents.defaults.model.primary "zhipuai/glm-5.1"
+
+# 设置备用模型为本地模型
+openclaw config set agents.defaults.model.fallbacks[0] "omlx/gemma-4-e4b-it-4bit"
+```
+
+#### 模型推理测试
+
+```bash
+# 测试智谱AI（主模型）
+openclaw infer model run --prompt "你好，请介绍你自己"
+
+# 测试本地模型（备用）
+openclaw infer model run --model omlx/gemma-4-e4b-it-4bit --prompt "你好"
+
+# 测试视觉模型（图像理解）
+openclaw infer model run --model zhipuai/glm-5v-turbo \
+  --prompt "详细描述这张图片的内容" \
+  --image /path/to/image.jpg
+
+# OCR文字识别
+openclaw infer model run --model zhipuai/glm-5v-turbo \
+  --prompt "提取图片中的所有文字" \
+  --image /path/to/document.jpg
+```
+
+#### 智能降级机制
+
+**工作原理：**
+1. **正常情况：** 请求 → 智谱AI（主模型）→ 响应（2-3秒）
+2. **API故障：** 请求 → 智谱AI（失败）→ 本地模型（备用）→ 响应（15-30秒）
+3. **自动切换：** OpenClaw原生支持，对用户透明
+
+**降级场景：**
+- 网络连接问题
+- API服务暂时不可用
+- API配额用尽
+- API Key失效
+
+**无需手动干预：** 系统会自动检测并切换，保证服务连续性。
+
+---
+
 ### OpenClaw 通用命令
 
 ```bash
@@ -240,13 +318,14 @@ openclaw agents list
 openclaw agents add myagent --workspace ~/.openclaw/workspace-myagent
 
 # 配置 Agent
-openclaw agents config myagent --model omlx/gemma-4-e4b-it-4bit
+openclaw agents config myagent --model zhipuai/glm-5.1
 
 # 切换 Agent
 openclaw agents use myagent
 
-# 测试推理
-openclaw infer model run --model omlx/gemma-4-e4b-it-4bit --prompt "你好"
+# 查看当前配置
+openclaw config get agents.defaults.model.primary
+openclaw config get agents.defaults.model.fallbacks
 ```
 
 ---
@@ -302,20 +381,41 @@ chmod +x install.zsh
 
 ### 安装模式说明
 
-**交互式安装**（默认）：
+**交互式安装**（推荐，新增主菜单）：
 ```bash
 ./install.zsh
 ```
 
-**自动安装**（无交互）：
-```bash
-./install.zsh --auto
+**主菜单选项：**
+```
+╔════════════════════════════════════════════════════════════╗
+║       🦞 MacClaw Install - 安装工具                        ║
+║                                                            ║
+║       一键安装 OpenClaw + omlx 本地 AI 环境                ║
+║                                                            ║
+╚════════════════════════════════════════════════════════════╝
+
+请选择操作：
+
+  1) 🚀 完整安装 - 安装所有组件（推荐）
+  2) 🔧 仅安装 OpenClaw
+  3) 🤖 仅安装 oMLX
+  4) ⚙️  配置本地算力
+  5) 📦 安装插件
+  6) 🤖 创建 Agent
+  7) 🧠 智能双模型配置（云端+本地） ← 新增
+  8) ❌ 退出
 ```
 
-**静默安装**（最小输出）：
+**管道安装**（非交互模式）：
 ```bash
-./install.zsh --silent
+curl -fsSL https://raw.githubusercontent.com/changzhi777/mactools/main/macclaw_install/install.zsh | zsh
 ```
+
+**特点：**
+- 交互模式：显示主菜单，按需选择功能
+- 管道模式：自动执行完整安装，适合脚本调用
+- 智能检测：自动检测已安装组件，避免重复安装
 
 ### 自定义 BB小子 配置
 
@@ -333,6 +433,45 @@ vim ~/.openclaw/workspaces/bb-kid/USER.md
 
 # 编辑 Agent 灵魂
 vim ~/.openclaw/workspaces/bb-kid/SOUL.md
+```
+
+### 智能双模型配置
+
+**配置文件位置：** `~/.openclaw/openclaw.json`
+
+**查看当前配置：**
+```bash
+# 查看主模型
+openclaw config get agents.defaults.model.primary
+# 预期输出：zhipuai/glm-5.1
+
+# 查看备用模型
+openclaw config get agents.defaults.model.fallbacks
+# 预期输出：["omlx/gemma-4-e4b-it-4bit"]
+
+# 查看智谱AI配置
+cat ~/.openclaw/openclaw.json | jq '.models.providers.zhipuai'
+```
+
+**手动修改配置：**
+```bash
+# 切换主模型
+openclaw config set agents.defaults.model.primary "zhipuai/glm-5.1"
+
+# 切换备用模型
+openclaw config set agents.defaults.model.fallbacks[0] "omlx/gemma-4-e4b-it-4bit"
+
+# 更新API Key
+openclaw config set models.providers.zhipuai.apiKey "your-api-key"
+```
+
+**配置备份：**
+```bash
+# 自动备份位置
+ls -la ~/.openclaw/openclaw.json.backup.*
+
+# 手动备份
+cp ~/.openclaw/openclaw.json ~/.openclaw/openclaw.json.backup.manual
 ```
 
 ---
@@ -385,11 +524,106 @@ chmod +x uninstall.zsh
 2. 验证模型加载：检查 oMLX 应用
 3. 查看 API Key：`cat ~/.omlx/settings.json`
 
+### 智能双模型配置问题
+
+**问题1：智谱AI API调用失败**
+
+症状：
+```
+Error: API request failed
+```
+
+解决方案：
+```bash
+# 1. 检查API Key配置
+openclaw config get models.providers.zhipuai.apiKey
+
+# 2. 验证网络连接
+curl -I https://open.bigmodel.cn/api/paas/v4
+
+# 3. 测试智谱AI
+openclaw infer model run --model zhipuai/glm-5.1 --prompt "测试"
+
+# 4. 系统会自动降级到本地模型
+openclaw infer model run --model omlx/gemma-4-e4b-it-4bit --prompt "测试"
+```
+
+**问题2：配置未生效**
+
+症状：
+```
+主模型仍为本地模型
+```
+
+解决方案：
+```bash
+# 1. 检查当前配置
+openclaw config get agents.defaults.model.primary
+openclaw config get agents.defaults.model.fallbacks
+
+# 2. 重新配置
+openclaw config set agents.defaults.model.primary "zhipuai/glm-5.1"
+openclaw config set agents.defaults.model.fallbacks[0] "omlx/gemma-4-e4b-it-4bit"
+
+# 3. 重启OpenClaw网关
+openclaw gateway restart
+
+# 4. 或使用交互式菜单
+cd macclaw_install
+./install.zsh
+# 选择：7) 🧠 智能双模型配置
+```
+
+**问题3：视觉模型不可用**
+
+症状：
+```
+Error: Model glm-5v-turbo not found
+```
+
+解决方案：
+```bash
+# 1. 检查视觉模型是否已添加
+cat ~/.openclaw/openclaw.json | jq '.models.providers.zhipuai.models[] | select(.id == "glm-5v-turbo")'
+
+# 2. 重新运行智能配置
+cd macclaw_install
+./install.zsh
+# 选择：7) 🧠 智能双模型配置
+
+# 3. 手动添加视觉模型
+# （参见上方"自定义智能双模型配置"部分）
+```
+
+**问题4：自动降级未生效**
+
+症状：
+```
+API失败后没有切换到本地模型
+```
+
+解决方案：
+```bash
+# 1. 验证备用模型配置
+openclaw config get agents.defaults.model.fallbacks
+
+# 2. 确保本地模型可用
+openclaw infer model run --model omlx/gemma-4-e4b-it-4bit --prompt "测试"
+
+# 3. 检查oMLX服务状态
+# 打开 /Applications/oMLX.app
+# 或检查：curl http://127.0.0.1:8008/health
+
+# 4. 查看降级日志
+tail -f /tmp/openclaw/openclaw-*.log | grep -i fallback
+```
+
 ---
 
 ## 📚 文档
 
 - [测试报告](TEST_REPORT.md) - 完整测试报告（26/26 通过）
+- [智能双模型配置测试](.zcf/plan/current/智能双模型配置测试报告.md) - 双模型测试报告
 - [BB小子示例](bb-kid-example/README.md) - BB小子完整使用说明
 - [安装指南](macclaw_install/INSTALL_GUIDE.md) - 详细安装说明
 - [架构设计](macclaw_install/docs/ARCHITECTURE.md) - 系统架构说明
@@ -439,7 +673,7 @@ chmod +x uninstall.zsh
 
 ## 📊 测试状态
 
-**总评分：26/26 测试通过 ✅**
+**基础功能：26/26 测试通过 ✅**
 
 - 脚本下载: 3/3 ✅
 - 完整性检查: 3/3 ✅
@@ -449,9 +683,21 @@ chmod +x uninstall.zsh
 - 功能测试: 4/4 ✅
 - 集成测试: 4/4 ✅
 
+**智能双模型配置：7/7 测试通过 ✅**
+
+- 配置检查: 1/1 ✅
+- 智谱AI配置: 1/1 ✅
+- 主模型设置: 1/1 ✅
+- 备用模型设置: 1/1 ✅
+- 视觉模型添加: 1/1 ✅
+- API测试: 1/1 ✅
+- 降级机制: 1/1 ✅
+
 **生产就绪状态：✅ 已就绪**
 
-详细测试报告：[TEST_REPORT.md](TEST_REPORT.md)
+详细测试报告：
+- [基础功能测试](TEST_REPORT.md)
+- [智能双模型配置测试](.zcf/plan/current/智能双模型配置测试报告.md)
 
 ---
 
