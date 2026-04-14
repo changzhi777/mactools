@@ -307,16 +307,8 @@ install_omlx() {
         return 0
     else
         local exit_code=$?
-        if type throw_error >/dev/null 2>&1; then
-            throw_error ${ERR_OMLX_INSTALL} "oMLX 安装失败" "退出码: ${exit_code}"
-        else
-            log_error "oMLX 安装失败（退出码: ${exit_code}）"
-            increment_error_count
-        fi
-        return 1
-    fi
         # 安装失败，提供选项
-        log_error "oMLX 安装失败"
+        log_error "oMLX 安装失败（退出码: ${exit_code}）"
 
         if [[ "${INSTALL_MODE}" == "auto" ]]; then
             return 1
