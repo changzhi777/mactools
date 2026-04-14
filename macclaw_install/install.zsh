@@ -588,9 +588,15 @@ configure_omlx_local() {
     echo "  1) 是 - 配置 oMLX 作为默认推理引擎"
     echo "  2) 否 - 跳过配置"
     echo ""
-    echo -n "请选择 [1-2]: "
 
-    read choice
+    # 检测是否为非交互模式（管道安装）
+    if [[ ! -t 0 ]]; then
+        echo -e "${CYAN}[自动选择] 是 - 配置 oMLX 作为默认推理引擎${NC}"
+        choice="1"
+    else
+        echo -n "请选择 [1-2]: "
+        read choice
+    fi
     echo ""
 
     case "${choice}" in
@@ -688,9 +694,15 @@ optimize_omlx_performance() {
     echo "  2) 否 - 跳过优化"
     echo "  3) 查看详细配置 - 查看当前详细配置"
     echo ""
-    echo -n "请选择 [1-3]: "
 
-    read choice
+    # 检测是否为非交互模式（管道安装）
+    if [[ ! -t 0 ]]; then
+        echo -e "${CYAN}[自动选择] 是 - 开始性能优化${NC}"
+        choice="1"
+    else
+        echo -n "请选择 [1-3]: "
+        read choice
+    fi
     echo ""
 
     case "${choice}" in
@@ -844,9 +856,15 @@ install_plugins() {
     echo "  2) 选择安装 - 选择要安装的插件"
     echo "  3) 跳过 - 不安装插件"
     echo ""
-    echo -n "请选择 [1-3]: "
 
-    read choice
+    # 检测是否为非交互模式（管道安装）
+    if [[ ! -t 0 ]]; then
+        echo -e "${CYAN}[自动选择] 全部安装 - 安装所有推荐插件${NC}"
+        choice="1"
+    else
+        echo -n "请选择 [1-3]: "
+        read choice
+    fi
     echo ""
 
     case "${choice}" in
@@ -942,9 +960,15 @@ create_agents() {
     echo "  5) 🔧 自定义 - 创建自定义 Agent"
     echo "  6) ⏭️  跳过 - 不创建 Agent"
     echo ""
-    echo -n "请选择 [1-6]: "
 
-    read choice
+    # 检测是否为非交互模式（管道安装）
+    if [[ ! -t 0 ]]; then
+        echo -e "${CYAN}[自动选择] BB小子 - 基于 oMLX 本地 AI 的智能助手${NC}"
+        choice="1"
+    else
+        echo -n "请选择 [1-6]: "
+        read choice
+    fi
     echo ""
 
     case "${choice}" in
@@ -1125,9 +1149,15 @@ EOF
     echo "  1) 是 - 发送测试消息"
     echo "  2) 否 - 跳过测试"
     echo ""
-    echo -n "请选择 [1-2]: "
 
-    read test_choice
+    # 检测是否为非交互模式（管道安装）
+    if [[ ! -t 0 ]]; then
+        echo -e "${CYAN}[自动选择] 否 - 跳过测试（非交互模式）${NC}"
+        test_choice="2"
+    else
+        echo -n "请选择 [1-2]: "
+        read test_choice
+    fi
     echo ""
 
     if [[ "${test_choice}" == "1" ]]; then
