@@ -922,25 +922,41 @@ create_agents() {
     echo -e "${CYAN}  创建 AI Agent${NC}"
     echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo ""
+
+    # 检查 oMLX 是否可用
+    local omlx_available=false
+    if [[ -d "/Applications/oMLX.app" ]]; then
+        omlx_available=true
+        echo -e "${GREEN}✅ 检测到 oMLX 本地算力${NC}"
+    else
+        echo -e "${YELLOW}⚠️  未检测到 oMLX，Agent 将使用其他推理引擎${NC}"
+    fi
+
+    echo ""
     echo -e "${WHITE}推荐 Agent 模板：${NC}"
     echo ""
-    echo "  1) 开发者助手 - 专业的软件开发助手"
-    echo "  2) 写作助手 - 专业的写作和编辑助手"
-    echo "  3) 数据分析助手 - 专业的数据分析和洞察助手"
-    echo "  4) 自定义 - 创建自定义 Agent"
-    echo "  5) 跳过 - 不创建 Agent"
+    echo "  1) 🤖 BB小子 - 基于 oMLX 本地 AI 的智能助手（推荐）"
+    echo "  2) 👨‍💻 开发者助手 - 专业的软件开发助手"
+    echo "  3) ✍️ 写作助手 - 专业的写作和编辑助手"
+    echo "  4) 📊 数据分析助手 - 专业的数据分析和洞察助手"
+    echo "  5) 🔧 自定义 - 创建自定义 Agent"
+    echo "  6) ⏭️  跳过 - 不创建 Agent"
     echo ""
-    echo -n "请选择 [1-5]: "
+    echo -n "请选择 [1-6]: "
 
     read choice
     echo ""
 
     case "${choice}" in
-        1|"developer"|"d"|"D")
+        1|"bb-kid"|"b"|"B"|"bb"|"BB小子")
+            create_bb_kid_agent
+            ;;
+
+        2|"developer"|"d"|"D")
             create_agent "developer" "开发者助手" "👨‍💻" "coding"
             ;;
 
-        2|"writer"|"w"|"W")
+        3|"writer"|"w"|"W")
             create_agent "writer" "写作助手" "✍️" "writing"
             ;;
 
@@ -948,7 +964,7 @@ create_agents() {
             create_agent "analyst" "数据分析助手" "📊" "data"
             ;;
 
-        4|"custom"|"c"|"C"|"自定义")
+        5|"custom"|"c"|"C"|"自定义")
             echo ""
             echo -n "请输入 Agent 名称: "
             read agent_name
@@ -962,7 +978,7 @@ create_agents() {
             create_agent "${agent_name}" "${agent_description}" "${agent_emoji}" "${agent_theme}"
             ;;
 
-        5|"skip"|"s"|"S"|"跳过")
+        6|"skip"|"s"|"S"|"跳过")
             log_info "跳过 Agent 创建"
             ;;
 
@@ -970,6 +986,171 @@ create_agents() {
             log_warning "无效选择，跳过 Agent 创建"
             ;;
     esac
+}
+
+# BB小子 Agent 创建函数
+create_bb_kid_agent() {
+    log_section "创建 BB小子 Agent"
+
+    local agent_id="bb-kid"
+    local agent_name="BB小子"
+    local agent_emoji="🤖"
+    local agent_theme="tech"
+
+    echo ""
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${CYAN}  BB小子 - oMLX 本地 AI 助手${NC}"
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+    echo -e "${WHITE}🤖 BB小子 特性：${NC}"
+    echo "  • 基于 oMLX 本地 AI 引擎"
+    echo "  • 使用 gemma-4-e4b-it-4bit 模型"
+    echo "  • 擅长编程、写作和分析"
+    echo "  • 完全本地运行，保护隐私"
+    echo ""
+
+    # 检查 oMLX 是否可用
+    if ! [[ -d "/Applications/oMLX.app" ]]; then
+        log_warning "oMLX 应用未安装"
+        log_info "BB小子 Agent 将使用其他推理引擎"
+    else
+        log_success "oMLX 本地算力已就绪"
+    fi
+
+    # 检查 Agent 是否已存在
+    if openclaw agents list 2>/dev/null | grep -q "${agent_id}"; then
+        log_warning "Agent 'bb-kid' 已存在"
+
+        echo ""
+        echo -n "是否重新配置 BB小子 Agent？[y/N]: "
+        read recreate_choice
+        if [[ ! "${recreate_choice}" =~ ^[yY] ]]; then
+            log_info "保持现有配置"
+            return 0
+        fi
+
+        log_info "重新配置 BB小子 Agent..."
+    else
+        log_info "创建新的 BB小子 Agent..."
+    fi
+
+    # 创建 BB小子 工作空间
+    local workspace="${HOME}/.openclaw/workspaces/${agent_id}"
+
+    if [[ ! -d "${workspace}" ]]; then
+        mkdir -p "${workspace}"
+        log_info "创建工作空间: ${workspace}"
+    fi
+
+    # 创建 BB小子 配置文件
+    local bb_config="${workspace}/bb-kid-config.json"
+    cat > "${bb_config}" << EOF
+{
+  "name": "BB小子",
+  "description": "基于 oMLX 本地 AI 的智能助手",
+  "version": "1.0.0",
+  "created": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
+  "model": "omlx/gemma-4-e4b-it-4bit",
+  "capabilities": [
+    "编程开发",
+    "代码审查",
+    "技术写作",
+    "问题分析",
+    "创意生成"
+  ],
+  "preferences": {
+    "language": "zh-CN",
+    "creativity": "balanced",
+    "response_length": "medium"
+  }
+}
+EOF
+
+    # 添加或更新 Agent
+    if openclaw agents list 2>/dev/null | grep -q "${agent_id}"; then
+        # Agent 已存在，只更新配置
+        log_info "更新 BB小子 Agent 配置..."
+    else
+        # 创建新 Agent
+        if openclaw agents add "${agent_id}" --workspace "${workspace}" 2>&1 | tee -a "${LOG_FILE}"; then
+            log_success "BB小子 Agent 创建成功"
+        else
+            log_error "BB小子 Agent 创建失败"
+            return 1
+        fi
+    fi
+
+    # 设置 BB小子身份
+    openclaw agents set-identity "${agent_id}" \
+        --name "${agent_name}" \
+        --emoji "${agent_emoji}" \
+        --theme "${agent_theme}" 2>/dev/null || true
+
+    # 配置 BB小子 使用 oMLX 模型
+    log_info "配置 BB小子 使用 oMLX 本地模型..."
+
+    # 为 BB小子 设置专用模型配置
+    if openclaw config set "agents.${agent_id}.model" "omlx/gemma-4-e4b-it-4bit" 2>&1 | tee -a "${LOG_FILE}"; then
+        log_success "BB小子 模型配置成功"
+    else
+        log_warning "模型配置失败，使用默认配置"
+    fi
+
+    echo ""
+    echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${GREEN}  🤖 BB小子 Agent 创建完成！${NC}"
+    echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+    echo -e "${WHITE}📋 BB小子 信息：${NC}"
+    echo "  • 名称: BB小子"
+    echo "  • ID: bb-kid"
+    echo "  • Emoji: 🤖"
+    echo "  • 模型: omlx/gemma-4-e4b-it-4bit"
+    echo "  • 工作空间: ${workspace}"
+    echo ""
+    echo -e "${WHITE}🚀 使用方法：${NC}"
+    echo ""
+    echo "  # 切换到 BB小子 Agent"
+    echo "  openclaw agents use bb-kid"
+    echo ""
+    echo "  # 与 BB小子对话"
+    echo "  openclaw agent"
+    echo ""
+    echo "  # 查看 BB小子配置"
+    echo "  openclaw agents list"
+    echo ""
+
+    # 测试 BB小子
+    echo -e "${YELLOW}是否测试 BB小子 Agent？${NC} "
+    echo "  1) 是 - 发送测试消息"
+    echo "  2) 否 - 跳过测试"
+    echo ""
+    echo -n "请选择 [1-2]: "
+
+    read test_choice
+    echo ""
+
+    if [[ "${test_choice}" == "1" ]]; then
+        log_info "测试 BB小子 Agent..."
+
+        # 切换到 BB小子 Agent
+        if openclaw agents use "${agent_id}" 2>/dev/null; then
+            log_success "已切换到 BB小子 Agent"
+
+            # 发送测试消息
+            echo ""
+            echo -e "${CYAN}正在发送测试消息...${NC}"
+            if openclaw agent --prompt "你好，我是BB小子的创造者，请做一个自我介绍" 2>&1 | tee -a "${LOG_FILE}"; then
+                log_success "✅ BB小子 Agent 测试成功！"
+            else
+                log_warning "Agent 测试失败"
+            fi
+        else
+            log_warning "切换 Agent 失败"
+        fi
+    fi
+
+    return 0
 }
 
 # Agent 创建辅助函数
