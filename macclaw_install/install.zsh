@@ -634,6 +634,172 @@ configure_omlx_local() {
 }
 
 # ==============================================================================
+# 优化 oMLX 性能
+# ==============================================================================
+
+optimize_omlx_performance() {
+    log_section "优化 oMLX 性能"
+
+    if ! [[ -d "/Applications/oMLX.app" ]]; then
+        log_warning "oMLX 应用未安装，无法优化性能"
+        return 1
+    fi
+
+    local omlx_config="${HOME}/.omlx/settings.json"
+    local omlx_stats="${HOME}/.omlx/stats.json"
+
+    if [[ ! -f "${omlx_config}" ]]; then
+        log_warning "oMLX 配置文件不存在"
+        return 1
+    fi
+
+    echo ""
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${CYAN}  oMLX 性能优化${NC}"
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+
+    # 显示当前性能统计
+    if [[ -f "${omlx_stats}" ]]; then
+        echo -e "${WHITE}📊 当前使用统计：${NC}"
+        local total_requests=$(jq -r '.total_requests' "${omlx_stats}" 2>/dev/null || echo "0")
+        local cached_tokens=$(jq -r '.total_cached_tokens' "${omlx_stats}" 2>/dev/null || echo "0")
+        local cache_hit_rate=$(echo "scale=1; ${cached_tokens} * 100 / ($(jq -r '.total_prompt_tokens' "${omlx_stats}" 2>/dev/null || echo "1") + ${cached_tokens})" | bc 2>/dev/null || echo "0")
+
+        echo "  • 总请求数: ${total_requests}"
+        echo "  • 缓存命中数: ${cached_tokens}"
+        echo "  • 缓存命中率: ${cache_hit_rate}%"
+        echo ""
+    fi
+
+    # 显示当前配置
+    echo -e "${WHITE}⚙️  当前配置：${NC}"
+    local current_concurrent=$(jq -r '.scheduler.max_concurrent_requests' "${omlx_config}" 2>/dev/null || echo "未知")
+    local current_cache=$(jq -r '.cache.initial_cache_blocks' "${omlx_config}" 2>/dev/null || echo "未知")
+    local current_temp=$(jq -r '.sampling.temperature' "${omlx_config}" 2>/dev/null || echo "未知")
+
+    echo "  • 并发请求: ${current_concurrent}"
+    echo "  • 初始缓存块: ${current_cache}"
+    echo "  • 采样温度: ${current_temp}"
+    echo ""
+
+    echo -e "${YELLOW}是否优化 oMLX 性能配置？${NC}"
+    echo "  1) 是 - 开始性能优化"
+    echo "  2) 否 - 跳过优化"
+    echo "  3) 查看详细配置 - 查看当前详细配置"
+    echo ""
+    echo -n "请选择 [1-3]: "
+
+    read choice
+    echo ""
+
+    case "${choice}" in
+        1|"yes"|"y"|"Y"|"是")
+            log_info "开始优化 oMLX 性能..."
+
+            # 备份当前配置
+            local backup_config="${HOME}/.omlx/settings.json.backup"
+            cp "${omlx_config}" "${backup_config}"
+            log_info "已备份当前配置到: ${backup_config}"
+
+            # 根据系统内存自动优化
+            local memory_gb=$(( $(sysctl -n hw.memsize) / 1024 / 1024 / 1024 ))
+            local new_concurrent=""
+            local new_cache_blocks=""
+            local new_hot_cache=""
+
+            if [[ ${memory_gb} -ge 32 ]]; then
+                # 高配置系统
+                new_concurrent="16"
+                new_cache_blocks="512"
+                new_hot_cache="1073741824"  # 1GB
+                log_info "检测到高配置系统 (${memory_gb}GB)，使用高性能配置"
+            elif [[ ${memory_gb} -ge 16 ]]; then
+                # 中配置系统
+                new_concurrent="12"
+                new_cache_blocks="384"
+                new_hot_cache="536870912"  # 512MB
+                log_info "检测到中配置系统 (${memory_gb}GB)，使用平衡配置"
+            else
+                # 低配置系统
+                new_concurrent="8"
+                new_cache_blocks="256"
+                new_hot_cache="268435456"  # 256MB
+                log_info "检测到低配置系统 (${memory_gb}GB)，使用保守配置"
+            fi
+
+            # 应用优化配置
+            log_info "应用性能优化..."
+
+            if command -v jq >/dev/null 2>&1; then
+                # 使用 jq 修改配置
+                jq ".scheduler.max_concurrent_requests = ${new_concurrent}" "${omlx_config}" > /tmp/omlx_settings.json
+                jq ".cache.initial_cache_blocks = ${new_cache_blocks}" /tmp/omlx_settings.json > /tmp/omlx_settings.tmp
+                jq ".cache.hot_cache_max_size = \"${new_hot_cache}\"" /tmp/omlx_settings.tmp > "${omlx_config}"
+                rm -f /tmp/omlx_settings.tmp
+
+                log_success "配置文件已更新"
+            else
+                log_warning "jq 未安装，使用备用方法..."
+                # 备用方法：使用 sed
+                sed -i '' "s/\"max_concurrent_requests\": [0-9]*/\"max_concurrent_requests\": ${new_concurrent}/" "${omlx_config}"
+                sed -i '' "s/\"initial_cache_blocks\": [0-9]*/\"initial_cache_blocks\": ${new_cache_blocks}/" "${omlx_config}"
+                log_success "配置文件已更新（备用方法）"
+            fi
+
+            # 需要重启 oMLX 服务以应用新配置
+            echo ""
+            echo -e "${YELLOW}⚠️  oMLX 服务需要重启以应用新配置${NC}"
+            echo ""
+            echo "重启方法："
+            echo "  1. 在 oMLX 应用中点击 '重启服务' 按钮"
+            echo "  2. 或重启 oMLX 应用"
+            echo ""
+
+            echo -n "重启完成后，按 Enter 继续..."
+            read
+
+            # 验证配置
+            log_info "验证新配置..."
+            local verify_concurrent=$(jq -r '.scheduler.max_concurrent_requests' "${omlx_config}" 2>/dev/null || echo "未知")
+
+            echo ""
+            echo -e "${WHITE}🎯 优化后配置：${NC}"
+            echo "  • 并发请求: ${current_concurrent} → ${verify_concurrent}"
+            echo "  • 缓存块: ${current_cache} → ${new_cache_blocks}"
+            echo ""
+
+            log_success "✅ oMLX 性能优化完成！"
+            ;;
+
+        2|"no"|"n"|"N"|"否")
+            log_info "跳过性能优化"
+            return 0
+            ;;
+
+        3|"view"|"v"|"V"|"查看")
+            log_info "当前详细配置："
+            echo ""
+            cat "${omlx_config}" | jq '.' 2>/dev/null || cat "${omlx_config}"
+            echo ""
+
+            # 询问是否继续优化
+            echo -n "是否继续优化？[y/N]: "
+            read continue_choice
+            if [[ "${continue_choice}" =~ ^[yY] ]]; then
+                optimize_omlx_performance
+                return $?
+            fi
+            ;;
+
+        *)
+            log_warning "无效选择，跳过优化"
+            return 0
+            ;;
+    esac
+}
+
+# ==============================================================================
 # 安装插件
 # ==============================================================================
 
@@ -894,6 +1060,7 @@ main() {
 
     # 高级功能
     configure_omlx_local
+    optimize_omlx_performance
     install_plugins
     create_agents
 
