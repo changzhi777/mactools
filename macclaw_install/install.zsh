@@ -1313,6 +1313,9 @@ main() {
     install_plugins || true
     create_agents || true
 
+    # 打开BB小子对话界面
+    launch_bb_kid_dashboard || true
+
     # 最终检测
     log_section "安装完成"
     detect_components
@@ -1420,6 +1423,86 @@ main() {
         echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
         echo ""
     fi
+}
+
+# ==============================================================================
+# 打开BB小子对话界面
+# ==============================================================================
+
+launch_bb_kid_dashboard() {
+    log_section "打开BB小子对话界面"
+
+    # 检查BB小子Agent是否存在
+    if ! openclaw agents list 2>/dev/null | grep -q "bb-kid"; then
+        log_warning "BB小子 Agent不存在，无法打开对话界面"
+        return 1
+    fi
+
+    # 切换到BB小子Agent
+    log_info "切换到BB小子 Agent..."
+    if openclaw agents use bb-kid 2>&1 | tee -a "${LOG_FILE}"; then
+        log_success "已切换到BB小子 Agent"
+    else
+        log_warning "切换Agent失败，但继续尝试打开界面"
+    fi
+
+    # 检测是否为非交互模式
+    if [[ ! -t 0 ]]; then
+        echo ""
+        echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo -e "${CYAN}  🚀 打开BB小子对话界面${NC}"
+        echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo ""
+        echo -e "${WHITE}正在自动打开OpenClaw控制界面...${NC}"
+        echo ""
+
+        # 打开dashboard
+        log_info "正在启动OpenClaw Dashboard..."
+        if openclaw dashboard 2>&1 | tee -a "${LOG_FILE}"; then
+            echo ""
+            echo -e "${GREEN}✅ OpenClaw控制界面已打开${NC}"
+            echo ""
+            echo -e "${WHITE}🤖 BB小子 Agent已在浏览器中激活${NC}"
+            echo -e "${WHITE}💡 您可以直接在浏览器中与BB小子对话${NC}"
+            echo ""
+            echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+            echo ""
+            # 给用户时间看到消息
+            sleep 3
+        else
+            log_warning "Dashboard启动失败"
+            echo ""
+            echo -e "${YELLOW}您可以手动打开：${NC}"
+            echo -e "${CYAN}openclaw dashboard${NC}"
+            echo ""
+        fi
+    else
+        # 交互模式，询问是否打开
+        echo ""
+        echo -e "${YELLOW}是否打开BB小子对话界面？${NC}"
+        echo "  1) 是 - 自动打开浏览器"
+        echo "  2) 否 - 跳过"
+        echo ""
+        echo -n "请选择 [1-2]: "
+        read choice
+
+        case "${choice}" in
+            1|"yes"|"y"|"Y"|"是")
+                log_info "正在启动OpenClaw Dashboard..."
+                if openclaw dashboard 2>&1 | tee -a "${LOG_FILE}"; then
+                    log_success "✅ OpenClaw控制界面已打开"
+                else
+                    log_warning "Dashboard启动失败"
+                fi
+                ;;
+            *)
+                log_info "跳过打开对话界面"
+                ;;
+        esac
+    fi
+
+    # 无论结果如何都返回0
+    return 0
 }
 
 # 运行主函数
