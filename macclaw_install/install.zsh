@@ -134,12 +134,11 @@ check_openclaw() {
 }
 
 check_omlx() {
-    if pip3 show omlx &>/dev/null; then
-        local version=$(pip3 show omlx | grep Version | cut -d' ' -f2)
-        log_success "omlx 已安装: ${version}"
+    if [[ -d "/Applications/oMLX.app" ]]; then
+        log_success "oMLX 应用已安装"
         return 0
     else
-        log_info "omlx 未安装"
+        log_info "oMLX 应用未安装"
         return 1
     fi
 }
@@ -240,43 +239,51 @@ install_openclaw() {
 # ==============================================================================
 
 install_omlx() {
-    log_section "安装 omlx"
+    log_section "安装 oMLX"
 
-    if check_omlx; then
-        log_info "omlx 已安装，跳过"
+    # 检查 oMLX 应用是否已安装
+    if [[ -d "/Applications/oMLX.app" ]]; then
+        log_success "oMLX 应用已安装"
         return 0
     fi
 
-    log_info "开始安装 omlx..."
-    log_info "尝试使用官方 PyPI 源..."
+    log_info "oMLX 是一个 macOS 应用程序，需要手动安装"
+    log_warning "请按以下步骤安装 oMLX："
+    echo ""
+    echo "1. 下载 oMLX（适用于您的系统）："
 
-    # 先尝试官方源
-    if pip3 install --upgrade omlx 2>&1 | tee -a "${LOG_FILE}"; then
-        log_success "omlx 安装成功"
+    # 检测 macOS 版本
+    local macos_version=$(sw_vers -productVersion)
+    local major_version=$(echo "${macos_version}" | cut -d. -f1)
+
+    if [[ ${major_version} -ge 26 ]]; then
+        echo "   https://github.com/jundot/omlx/releases/download/v0.3.5.dev1/oMLX-0.3.5.dev1-macos26-tahoe.dmg"
+    elif [[ ${major_version} -ge 15 ]]; then
+        echo "   https://github.com/jundot/omlx/releases/download/v0.3.5.dev1/oMLX-0.3.5.dev1-macos15-sequoia.dmg"
     else
-        log_warning "官方源安装失败，尝试清华镜像..."
-        # 尝试清华镜像
-        local pip_index_url="https://pypi.tuna.tsinghua.edu.cn/simple"
-
-        if pip3 install --upgrade omlx -i "${pip_index_url}" 2>&1 | tee -a "${LOG_FILE}"; then
-            log_success "omlx 安装成功"
-        else
-            log_warning "omlx 安装失败，但这不影响 OpenClaw 使用"
-            log_info "OpenClaw 可以使用其他推理引擎"
-            return 0
-        fi
+        echo "   https://github.com/jundot/omlx/releases"
     fi
 
-    # 验证安装
-    if pip3 show omlx &>/dev/null; then
-        local version=$(pip3 show omlx | grep Version | cut -d' ' -f2)
-        log_success "omlx 验证成功: ${version}"
-        return 0
-    else
-        log_warning "omlx 安装验证失败"
-        log_info "OpenClaw 仍然可以使用其他推理引擎"
-        return 0
+    echo ""
+    echo "2. 打开下载的 DMG 文件"
+    echo "3. 将 oMLX.app 拖到 Applications 文件夹"
+    echo ""
+    echo "💡 或者运行以下命令自动下载并打开："
+    echo ""
+
+    if [[ ${major_version} -ge 26 ]]; then
+        echo "   curl -L -o /tmp/oMLX.dmg https://github.com/jundot/omlx/releases/download/v0.3.5.dev1/oMLX-0.3.5.dev1-macos26-tahoe.dmg"
+        echo "   open /tmp/oMLX.dmg"
+    elif [[ ${major_version} -ge 15 ]]; then
+        echo "   curl -L -o /tmp/oMLX.dmg https://github.com/jundot/omlx/releases/download/v0.3.5.dev1/oMLX-0.3.5.dev1-macos15-sequoia.dmg"
+        echo "   open /tmp/oMLX.dmg"
     fi
+
+    echo ""
+    log_info "跳过 oMLX 安装，您可以稍后手动安装"
+    log_info "OpenClaw 仍然可以正常使用"
+
+    return 0
 }
 
 # ==============================================================================
