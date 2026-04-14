@@ -1265,6 +1265,108 @@ create_agent() {
 }
 
 # ==============================================================================
+# 主菜单
+# ==============================================================================
+
+show_main_menu() {
+    clear
+    echo -e "${CYAN}"
+    echo "╔════════════════════════════════════════════════════════════╗"
+    echo "║                                                            ║"
+    echo "║       🦞 MacClaw Install - 安装工具                        ║"
+    echo "║                                                            ║"
+    echo "║       一键安装 OpenClaw + omlx 本地 AI 环境                ║"
+    echo "║                                                            ║"
+    echo "╚════════════════════════════════════════════════════════════╝"
+    echo -e "${NC}"
+    echo ""
+    echo -e "${WHITE}请选择操作：${NC}"
+    echo ""
+    echo "  1) 🚀 完整安装 - 安装所有组件（推荐）"
+    echo "  2) 🔧 仅安装 OpenClaw"
+    echo "  3) 🤖 仅安装 oMLX"
+    echo "  4) ⚙️  配置本地算力"
+    echo "  5) 📦 安装插件"
+    echo "  6) 🤖 创建 Agent"
+    echo "  7) 🧠 智能双模型配置（云端+本地）"
+    echo "  8) ❌ 退出"
+    echo ""
+    echo -n "请选择 [1-8]: "
+    read choice
+    echo ""
+
+    return "${choice}"
+}
+
+# ==============================================================================
+# 菜单执行函数
+# ==============================================================================
+
+run_from_menu() {
+    local choice=$1
+
+    case "${choice}" in
+        1)
+            # 完整安装（原有流程）
+            main
+            ;;
+
+        2)
+            # 仅安装 OpenClaw
+            log_section "仅安装 OpenClaw"
+            detect_system || true
+            install_openclaw || true
+            log_success "OpenClaw 安装完成"
+            ;;
+
+        3)
+            # 仅安装 oMLX
+            log_section "仅安装 oMLX"
+            detect_system || true
+            install_omlx || true
+            log_success "oMLX 安装完成"
+            ;;
+
+        4)
+            # 配置本地算力
+            log_section "配置本地算力"
+            configure_omlx_local || true
+            optimize_omlx_performance || true
+            log_success "本地算力配置完成"
+            ;;
+
+        5)
+            # 安装插件
+            log_section "安装插件"
+            install_plugins || true
+            log_success "插件安装完成"
+            ;;
+
+        6)
+            # 创建 Agent
+            log_section "创建 Agent"
+            create_agents || true
+            log_success "Agent 创建完成"
+            ;;
+
+        7)
+            # 智能双模型配置
+            configure_smart_dual_models
+            ;;
+
+        8|q|Q|exit|quit|"退出")
+            log_info "退出程序"
+            exit 0
+            ;;
+
+        *)
+            log_error "❌ 无效选择: ${choice}"
+            return 1
+            ;;
+    esac
+}
+
+# ==============================================================================
 # 主函数
 # ==============================================================================
 
@@ -1426,6 +1528,245 @@ main() {
 }
 
 # ==============================================================================
+# 智能双模型配置（云端 + 本地）
+# ==============================================================================
+
+configure_smart_dual_models() {
+    log_section "智能双模型配置（云端 + 本地）"
+
+    # 检查 OpenClaw 是否安装
+    if ! command -v openclaw >/dev/null 2>&1; then
+        log_error "OpenClaw 未安装，无法配置模型"
+        echo ""
+        echo -e "${YELLOW}请先安装 OpenClaw：${NC}"
+        echo "  选择主菜单选项 2) 🔧 仅安装 OpenClaw"
+        echo "  或运行: curl -fsSL https://raw.githubusercontent.com/changzhi777/mactools/main/macclaw_install/install.zsh | zsh"
+        echo ""
+        return 1
+    fi
+
+    # 显示当前配置
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${WHITE}当前模型配置：${NC}"
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+
+    local current_primary=$(openclaw config get agents.defaults.model.primary 2>/dev/null)
+    local current_fallbacks=$(openclaw config get agents.defaults.model.fallbacks 2>/dev/null)
+
+    echo -e "${WHITE}主模型：${NC} ${current_primary:-未配置}"
+    echo -e "${WHITE}备用模型：${NC} ${current_fallbacks:-未配置}"
+    echo ""
+
+    # 说明配置方案
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${WHITE}配置方案说明：${NC}"
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+    echo -e "${GREEN}🚀 主模型（云端）：${NC} 智谱 AI GLM-5.1"
+    echo "   • 优势：速度快、智能度高、支持工具调用"
+    echo "   • 成本：API 调用（免费额度充足）"
+    echo "   • 场景：日常推理、复杂任务"
+    echo ""
+    echo -e "${GREEN}🛡️ 备用模型（本地）：${NC} oMLX Gemma-4 4bit"
+    echo "   • 优势：免费、隐私保护、离线可用"
+    echo "   • 成本：本地算力"
+    echo "   • 场景：API 故障时自动降级"
+    echo ""
+    echo -e "${GREEN}👁️ 视觉模型：${NC} GLM-5V-Turbo"
+    echo "   • 功能：图像理解、OCR、图表分析"
+    echo "   • 输入：文本 + 图像"
+    echo ""
+    echo -e "${YELLOW}⚡ 智能降级：${NC}"
+    echo "   云端 API 失败时自动切换到本地模型，无需手动干预"
+    echo ""
+
+    # 询问确认
+    echo -e "${YELLOW}⚠️  即将应用此配置方案${NC}"
+    echo -e "${YELLOW}   当前的自定义配置将被备份${NC}"
+    echo ""
+    echo -e "${YELLOW}是否继续？${NC}"
+    echo "  1) 是 - 应用配置"
+    echo "  2) 否 - 取消操作"
+    echo ""
+    echo -n "请选择 [1-2]: "
+    read choice
+    echo ""
+
+    if [[ "${choice}" != "1" && "${choice}" != "yes" && "${choice}" != "y" && "${choice}" != "Y" && "${choice}" != "是" ]]; then
+        log_info "操作已取消"
+        return 0
+    fi
+
+    # 备份当前配置
+    local backup_file="${HOME}/.openclaw/openclaw.json.backup.$(date +%Y%m%d_%H%M%S)"
+    if [[ -f "${HOME}/.openclaw/openclaw.json" ]]; then
+        log_info "备份当前配置到: ${backup_file}"
+        if cp "${HOME}/.openclaw/openclaw.json" "${backup_file}"; then
+            log_success "✅ 配置已备份"
+        else
+            log_warning "⚠️  备份失败，但继续操作"
+        fi
+    else
+        log_warning "配置文件不存在，跳过备份"
+    fi
+
+    # 配置主模型为智谱 AI
+    echo ""
+    log_info "配置主模型为智谱 AI GLM-5.1..."
+    if openclaw config set agents.defaults.model.primary "zhipuai/glm-5.1" 2>&1 | tee -a "${LOG_FILE}"; then
+        log_success "✅ 主模型配置成功"
+    else
+        log_error "❌ 主模型配置失败"
+        return 1
+    fi
+
+    # 配置备用模型为 oMLX
+    echo ""
+    log_info "配置备用模型为 oMLX Gemma-4..."
+    if openclaw config set agents.defaults.model.fallbacks[0] "omlx/gemma-4-e4b-it-4bit" 2>&1 | tee -a "${LOG_FILE}"; then
+        log_success "✅ 备用模型配置成功"
+    else
+        log_warning "⚠️  备用模型配置失败（可能需要手动配置）"
+    fi
+
+    # 添加 GLM-5V-Turbo 视觉模型
+    echo ""
+    log_info "添加 GLM-5V-Turbo 视觉模型..."
+
+    # 读取当前配置
+    local config_file="${HOME}/.openclaw/openclaw.json"
+    if [[ -f "${config_file}" ]]; then
+        # 使用 jq 添加视觉模型（如果存在）
+        if command -v jq >/dev/null 2>&1; then
+            # 检查是否已存在 GLM-5V-Turbo
+            if ! jq -e '.models.providers.zhipuai.models[] | select(.id == "glm-5v-turbo")' "${config_file}" >/dev/null 2>&1; then
+                # 添加视觉模型配置
+                local temp_config=$(mktemp)
+                if jq '.models.providers.zhipuai.models += {
+                    "id": "glm-5v-turbo",
+                    "name": "GLM-5V-Turbo",
+                    "input": ["text", "image"],
+                    "reasoning": false,
+                    "contextWindow": 128000,
+                    "maxTokens": 8192,
+                    "cost": {"input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0},
+                    "compat": {"supportsTools": true}
+                }' "${config_file}" > "${temp_config}"; then
+                    if mv "${temp_config}" "${config_file}"; then
+                        log_success "✅ GLM-5V-Turbo 视觉模型已添加"
+                    else
+                        log_warning "⚠️  视觉模型添加失败"
+                        rm -f "${temp_config}"
+                    fi
+                else
+                    log_warning "⚠️  JSON 处理失败，跳过视觉模型配置"
+                    rm -f "${temp_config}"
+                fi
+            else
+                log_success "✅ GLM-5V-Turbo 视觉模型已存在"
+            fi
+        else
+            log_warning "⚠️  jq 未安装，跳过视觉模型自动配置"
+            echo "   提示：视觉模型可能已在 providers 中配置"
+        fi
+    else
+        log_warning "⚠️  配置文件不存在，跳过视觉模型配置"
+    fi
+
+    # 验证配置
+    echo ""
+    log_info "验证新配置..."
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+
+    local new_primary=$(openclaw config get agents.defaults.model.primary 2>/dev/null)
+    local new_fallbacks=$(openclaw config get agents.defaults.model.fallbacks 2>/dev/null)
+
+    echo -e "${WHITE}新主模型：${NC} ${new_primary}"
+    echo -e "${WHITE}新备用模型：${NC} ${new_fallbacks}"
+    echo ""
+
+    if [[ "${new_primary}" == "zhipuai/glm-5.1" ]]; then
+        log_success "✅ 主模型配置正确"
+    else
+        log_warning "⚠️  主模型配置可能不正确"
+    fi
+
+    if echo "${new_fallbacks}" | grep -q "omlx/gemma-4-e4b-it-4bit"; then
+        log_success "✅ 备用模型配置正确"
+    else
+        log_warning "⚠️  备用模型配置可能不正确"
+    fi
+
+    # 测试智谱 AI API
+    echo ""
+    echo -e "${YELLOW}是否测试智谱 AI API 连接？${NC}"
+    echo "  1) 是 - 发送测试消息"
+    echo "  2) 否 - 跳过测试"
+    echo ""
+    echo -n "请选择 [1-2]: "
+    read test_choice
+    echo ""
+
+    if [[ "${test_choice}" == "1" ]]; then
+        log_info "正在测试智谱 AI API..."
+        echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+
+        if openclaw infer model run --model zhipuai/glm-5.1 --prompt "你好，请用一句话介绍你自己" 2>&1 | tee -a "${LOG_FILE}"; then
+            echo ""
+            log_success "✅ 智谱 AI API 测试成功"
+            log_info "云端模型可用，系统将优先使用智谱 AI"
+        else
+            echo ""
+            log_warning "⚠️  智谱 AI API 测试失败"
+            echo ""
+            echo -e "${YELLOW}可能的原因：${NC}"
+            echo "  1. API Key 无效或已过期"
+            echo "  2. 网络连接问题"
+            echo "  3. API 服务暂时不可用"
+            echo ""
+            echo -e "${CYAN}解决方案：${NC}"
+            echo "  • 系统将自动降级到本地模型 omlx/gemma-4-e4b-it-4bit"
+            echo "  • 更新 API Key: openclaw config set models.providers.zhipuai.apiKey 'your-key'"
+            echo "  • 查看详细日志: cat ${LOG_FILE}"
+            echo ""
+        fi
+    fi
+
+    # 显示总结
+    echo ""
+    echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${GREEN}  ✅ 智能双模型配置完成！${NC}"
+    echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+    echo -e "${WHITE}📝 备份位置：${NC} ${backup_file}"
+    echo -e "${WHITE}🚀 主模型：${NC} zhipuai/glm-5.1（云端）"
+    echo -e "${WHITE}🛡️ 备用模型：${NC} omlx/gemma-4-e4b-it-4bit（本地）"
+    echo -e "${WHITE}👁️ 视觉模型：${NC} glm-5v-turbo（图像理解）"
+    echo ""
+    echo -e "${CYAN}快速测试命令：${NC}"
+    echo "  # 测试云端模型（智谱 AI）"
+    echo "  openclaw infer model run --model zhipuai/glm-5.1 --prompt '你好'"
+    echo ""
+    echo "  # 测试本地模型（oMLX）"
+    echo "  openclaw infer model run --model omlx/gemma-4-e4b-it-4bit --prompt '你好'"
+    echo ""
+    echo "  # 测试视觉模型（需要图像输入）"
+    echo "  openclaw infer model run --model zhipuai/glm-5v-turbo --prompt '描述这张图片' --image /path/to/image.jpg"
+    echo ""
+    echo -e "${YELLOW}💡 智能降级：${NC}"
+    echo "  云端 API 失败时系统会自动切换到本地模型，无需手动操作"
+    echo ""
+
+    return 0
+}
+
+# 保留原函数作为向后兼容
+reset_model_config() {
+    log_warning "reset_model_config() 已弃用，请使用 configure_smart_dual_models()"
+    configure_smart_dual_models
+}
+
+# ==============================================================================
 # 打开BB小子对话界面
 # ==============================================================================
 
@@ -1505,5 +1846,41 @@ launch_bb_kid_dashboard() {
     return 0
 }
 
-# 运行主函数
-main
+# ==============================================================================
+# 脚本入口
+# ==============================================================================
+
+# 检测是否为非交互模式（管道安装）
+if [[ ! -t 0 ]]; then
+    # 非交互模式，直接运行完整安装
+    main
+else
+    # 交互模式，显示主菜单
+    while true; do
+        show_main_menu
+        local choice=$?
+
+        if ! run_from_menu "${choice}"; then
+            # 执行失败，暂停后继续
+            echo ""
+            echo -e "${YELLOW}按 Enter 键继续...${NC}"
+            read
+        fi
+
+        # 询问是否继续
+        echo ""
+        echo -e "${YELLOW}是否返回主菜单？${NC}"
+        echo "  1) 是 - 返回主菜单"
+        echo "  2) 否 - 退出程序"
+        echo ""
+        echo -n "请选择 [1-2]: "
+        read continue_choice
+        echo ""
+
+        if [[ "${continue_choice}" != "1" && "${continue_choice}" != "yes" && "${continue_choice}" != "y" && "${continue_choice}" != "Y" && "${continue_choice}" != "是" ]]; then
+            log_info "退出程序"
+            break
+        fi
+    done
+fi
+
