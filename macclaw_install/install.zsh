@@ -27,6 +27,9 @@ NC='\033[0m' # No Color
 # 日志文件
 LOG_FILE="${HOME}/macclaw_simple_install.log"
 
+# 脚本目录
+SCRIPT_DIR="$(cd "$(dirname "${0}")" && pwd)"
+
 # ==============================================================================
 # 日志函数
 # ==============================================================================
@@ -537,6 +540,316 @@ test_model() {
 }
 
 # ==============================================================================
+# 配置 oMLX 本地算力
+# ==============================================================================
+
+configure_omlx_local() {
+    log_section "配置 oMLX 本地算力"
+
+    if ! check_openclaw; then
+        log_warning "OpenClaw 未安装，无法配置 oMLX"
+        return 1
+    fi
+
+    if ! [[ -d "/Applications/oMLX.app" ]]; then
+        log_warning "oMLX 应用未安装，无法配置本地算力"
+        log_info "请先安装 oMLX 应用"
+        return 1
+    fi
+
+    log_info "配置 OpenClaw 使用本地 oMLX 推理引擎..."
+
+    # 检查 oMLX 配置文件
+    local omlx_config="${HOME}/.omlx/settings.json"
+    local openclaw_config="${HOME}/.openclaw/openclaw.json"
+
+    if [[ ! -f "${omlx_config}" ]]; then
+        log_warning "oMLX 配置文件不存在: ${omlx_config}"
+        log_info "请先启动 oMLX 应用并完成初始配置"
+        return 1
+    fi
+
+    # 检查 OpenClaw 是否已配置 oMLX
+    if openclaw config get agents.defaults.model.primary 2>/dev/null | grep -q "omlx"; then
+        log_success "oMLX 本地算力已配置"
+        return 0
+    fi
+
+    echo ""
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${CYAN}  oMLX 本地算力配置${NC}"
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+    echo -e "${WHITE}检测到：${NC}"
+    echo "  • oMLX 应用: /Applications/oMLX.app"
+    echo "  • OpenClaw: $(openclaw --version 2>&1 | head -1)"
+    echo ""
+    echo -e "${YELLOW}是否配置 OpenClaw 使用本地 oMLX 推理？${NC}"
+    echo "  1) 是 - 配置 oMLX 作为默认推理引擎"
+    echo "  2) 否 - 跳过配置"
+    echo ""
+    echo -n "请选择 [1-2]: "
+
+    read choice
+    echo ""
+
+    case "${choice}" in
+        1|"yes"|"y"|"Y"|"是")
+            log_info "正在配置 oMLX 本地算力..."
+
+            # 配置 oMLX 为默认模型
+            if openclaw config set agents.defaults.model.primary "omlx/gemma-4-e4b-it-4bit" 2>&1 | tee -a "${LOG_FILE}"; then
+                log_success "oMLX 配置成功"
+                log_info "默认模型已设置为: omlx/gemma-4-e4b-it-4bit"
+            else
+                log_warning "配置失败，请手动配置"
+                log_info "手动配置命令："
+                echo "  openclaw config set agents.defaults.model.primary omlx/gemma-4-e4b-it-4bit"
+                return 1
+            fi
+
+            # 验证配置
+            log_info "验证配置..."
+            local configured_model=$(openclaw config get agents.defaults.model.primary 2>/dev/null)
+            if [[ "${configured_model}" == *"omlx"* ]]; then
+                log_success "✅ oMLX 本地算力配置成功！"
+                log_info "OpenClaw 现在使用本地 oMLX 进行推理"
+                return 0
+            else
+                log_warning "配置验证失败"
+                return 1
+            fi
+            ;;
+
+        2|"no"|"n"|"N"|"否")
+            log_info "跳过 oMLX 本地算力配置"
+            return 0
+            ;;
+
+        *)
+            log_warning "无效选择，跳过配置"
+            return 0
+            ;;
+    esac
+}
+
+# ==============================================================================
+# 安装插件
+# ==============================================================================
+
+install_plugins() {
+    log_section "安装推荐插件"
+
+    if ! check_openclaw; then
+        log_warning "OpenClaw 未安装，无法安装插件"
+        return 1
+    fi
+
+    # 加载插件配置
+    if [[ -f "${SCRIPT_DIR}/config/plugins.conf" ]]; then
+        source "${SCRIPT_DIR}/config/plugins.conf"
+    else
+        log_info "插件配置文件不存在，跳过插件安装"
+        return 0
+    fi
+
+    echo ""
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${CYAN}  OpenClaw 插件安装${NC}"
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+    echo -e "${WHITE}推荐插件列表：${NC}"
+    echo ""
+
+    # 显示推荐插件
+    local index=1
+    for plugin in "${RECOMMENDED_PLUGINS[@]}"; do
+        local description="${PLUGIN_DESCRIPTIONS[$plugin]:-无描述}"
+        local category="${PLUGIN_CATEGORIES[$plugin]:-other}"
+        echo -e "  ${GREEN}[${index}]${NC} ${plugin}"
+        echo "      ${description}"
+        echo "      类别: ${category}"
+        echo ""
+        ((index++))
+    done
+
+    echo -e "${YELLOW}是否安装推荐插件？${NC}"
+    echo "  1) 全部安装 - 安装所有推荐插件"
+    echo "  2) 选择安装 - 选择要安装的插件"
+    echo "  3) 跳过 - 不安装插件"
+    echo ""
+    echo -n "请选择 [1-3]: "
+
+    read choice
+    echo ""
+
+    case "${choice}" in
+        1|"all"|"a"|"A"|"全部")
+            log_info "开始安装所有推荐插件..."
+
+            local success_count=0
+            local fail_count=0
+
+            for plugin in "${RECOMMENDED_PLUGINS[@]}"; do
+                log_info "正在安装: ${plugin}"
+
+                if openclaw plugins install "${plugin}" 2>&1 | tee -a "${LOG_FILE}"; then
+                    log_success "✅ ${plugin} 安装成功"
+                    ((success_count++))
+                else
+                    log_warning "⚠️  ${plugin} 安装失败"
+                    ((fail_count++))
+                fi
+            done
+
+            echo ""
+            log_success "插件安装完成"
+            log_info "成功: ${success_count}, 失败: ${fail_count}"
+            ;;
+
+        2|"select"|"s"|"S"|"选择")
+            log_info "选择要安装的插件"
+            echo ""
+            echo "请输入要安装的插件编号（多个用空格分隔）:"
+            read -a selected_indices
+
+            for index in "${selected_indices[@]}"; do
+                if [[ ${index} -ge 1 && ${index} -le ${#RECOMMENDED_PLUGINS[@]} ]]; then
+                    local plugin="${RECOMMENDED_PLUGINS[$((index-1))]}"
+                    log_info "正在安装: ${plugin}"
+
+                    if openclaw plugins install "${plugin}" 2>&1 | tee -a "${LOG_FILE}"; then
+                        log_success "✅ ${plugin} 安装成功"
+                    else
+                        log_warning "⚠️  ${plugin} 安装失败"
+                    fi
+                fi
+            done
+            ;;
+
+        3|"skip"|"s"|"S"|"跳过")
+            log_info "跳过插件安装"
+            ;;
+
+        *)
+            log_warning "无效选择，跳过插件安装"
+            ;;
+    esac
+
+    return 0
+}
+
+# ==============================================================================
+# 创建 Agent
+# ==============================================================================
+
+create_agents() {
+    log_section "创建 AI Agent"
+
+    if ! check_openclaw; then
+        log_warning "OpenClaw 未安装，无法创建 Agent"
+        return 1
+    fi
+
+    echo ""
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${CYAN}  创建 AI Agent${NC}"
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+    echo -e "${WHITE}推荐 Agent 模板：${NC}"
+    echo ""
+    echo "  1) 开发者助手 - 专业的软件开发助手"
+    echo "  2) 写作助手 - 专业的写作和编辑助手"
+    echo "  3) 数据分析助手 - 专业的数据分析和洞察助手"
+    echo "  4) 自定义 - 创建自定义 Agent"
+    echo "  5) 跳过 - 不创建 Agent"
+    echo ""
+    echo -n "请选择 [1-5]: "
+
+    read choice
+    echo ""
+
+    case "${choice}" in
+        1|"developer"|"d"|"D")
+            create_agent "developer" "开发者助手" "👨‍💻" "coding"
+            ;;
+
+        2|"writer"|"w"|"W")
+            create_agent "writer" "写作助手" "✍️" "writing"
+            ;;
+
+        3|"analyst"|"a"|"A")
+            create_agent "analyst" "数据分析助手" "📊" "data"
+            ;;
+
+        4|"custom"|"c"|"C"|"自定义")
+            echo ""
+            echo -n "请输入 Agent 名称: "
+            read agent_name
+            echo -n "请输入 Agent 描述: "
+            read agent_description
+            echo -n "请选择 Emoji 图标: "
+            read agent_emoji
+            echo -n "请输入主题 (coding/writing/data/other): "
+            read agent_theme
+
+            create_agent "${agent_name}" "${agent_description}" "${agent_emoji}" "${agent_theme}"
+            ;;
+
+        5|"skip"|"s"|"S"|"跳过")
+            log_info "跳过 Agent 创建"
+            ;;
+
+        *)
+            log_warning "无效选择，跳过 Agent 创建"
+            ;;
+    esac
+}
+
+# Agent 创建辅助函数
+create_agent() {
+    local agent_id="$1"
+    local agent_name="$2"
+    local agent_emoji="$3"
+    local agent_theme="$4"
+
+    log_info "创建 Agent: ${agent_name}"
+
+    # 检查 Agent 是否已存在
+    if openclaw agents list 2>/dev/null | grep -q "${agent_id}"; then
+        log_warning "Agent '${agent_id}' 已存在"
+        return 0
+    fi
+
+    # 创建 Agent 工作空间
+    local workspace="${HOME}/.openclaw/workspaces/${agent_id}"
+
+    if [[ ! -d "${workspace}" ]]; then
+        mkdir -p "${workspace}"
+        log_info "创建工作空间: ${workspace}"
+    fi
+
+    # 添加 Agent
+    if openclaw agents add "${agent_id}" --workspace "${workspace}" 2>&1 | tee -a "${LOG_FILE}"; then
+        log_success "Agent 创建成功: ${agent_id}"
+
+        # 设置 Agent 身份
+        openclaw agents set-identity "${agent_id}" \
+            --name "${agent_name}" \
+            --emoji "${agent_emoji}" \
+            --theme "${agent_theme}" 2>/dev/null || true
+
+        log_info "Agent 配置完成"
+        log_info "  名称: ${agent_name}"
+        log_info "  ID: ${agent_id}"
+        log_info "  工作空间: ${workspace}"
+    else
+        log_warning "Agent 创建失败"
+        return 1
+    fi
+}
+
+# ==============================================================================
 # 主函数
 # ==============================================================================
 
@@ -579,6 +892,11 @@ main() {
     install_omlx
     test_model
 
+    # 高级功能
+    configure_omlx_local
+    install_plugins
+    create_agents
+
     # 最终检测
     log_section "安装完成"
     detect_components
@@ -593,20 +911,34 @@ main() {
     echo ""
     echo "🚀 快速开始："
     echo ""
-    echo "  # 测试推理（推荐）"
+    echo "  # 测试本地推理"
     echo "  openclaw infer model run --model omlx/gemma-4-e4b-it-4bit --prompt '你好'"
     echo ""
-    echo "  # 运行一个 Agent 交互"
+    echo "  # 运行 Agent 交互"
     echo "  openclaw agent"
     echo ""
-    echo "  # 查看所有命令"
+    echo "  # 查看所有 Agent"
+    echo "  openclaw agents list"
+    echo ""
+    echo "  # 查看已安装插件"
+    echo "  openclaw plugins list"
+    echo ""
+    echo "  # 查看帮助"
     echo "  openclaw --help"
     echo ""
-    echo "  # 查看模型列表"
-    echo "  openclaw infer model list"
+    echo "📚 更多功能："
     echo ""
     echo "  # 配置 OpenClaw"
     echo "  openclaw configure"
+    echo ""
+    echo "  # 创建新 Agent"
+    echo "  openclaw agents add myagent --workspace ~/.openclaw/workspace-myagent"
+    echo ""
+    echo "  # 安装插件"
+    echo "  openclaw plugins install <plugin-name>"
+    echo ""
+    echo "  # 查看模型状态"
+    echo "  openclaw models status"
     echo ""
 }
 
