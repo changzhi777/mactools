@@ -1,0 +1,339 @@
+{
+  "_comment": "OpenClaw + oMLX 高级配置示例",
+  "_version": "V1.0.0",
+  "_updated": "2026-04-18",
+
+  "omlx_settings": {
+    "_comment": "oMLX 高级配置",
+    "version": "1.0",
+    "server": {
+      "host": "127.0.0.1",
+      "port": 8008,
+      "log_level": "debug",
+      "cors_origins": ["http://localhost:*", "http://127.0.0.1:*"]
+    },
+    "model": {
+      "model_dirs": ["~/.omlx/models", "/opt/omlx/models"],
+      "model_dir": "~/.omlx/models",
+      "max_model_memory": "8GB",
+      "model_fallback": true
+    },
+    "memory": {
+      "max_process_memory": "12GB",
+      "prefill_memory_guard": false
+    },
+    "scheduler": {
+      "max_concurrent_requests": 8,
+      "queue_size": 100
+    },
+    "cache": {
+      "enabled": true,
+      "ssd_cache_dir": "~/.omlx/cache",
+      "ssd_cache_max_size": "10GB",
+      "hot_cache_max_size": "1GB",
+      "initial_cache_blocks": 512
+    },
+    "auth": {
+      "api_key": "your-secure-api-key-here",
+      "secret_key": "your-secret-key-here",
+      "skip_api_key_verification": false,
+      "sub_keys": [
+        {
+          "key": "client-key-1",
+          "permissions": ["read", "write"]
+        }
+      ]
+    },
+    "sampling": {
+      "max_context_window": 65536,
+      "max_tokens": 8192,
+      "temperature": 0.8,
+      "top_p": 0.95,
+      "top_k": 40,
+      "repetition_penalty": 1.1
+    },
+    "logging": {
+      "log_dir": "~/.omlx/logs",
+      "retention_days": 30,
+      "log_level": "info"
+    }
+  },
+
+  "openclaw_config": {
+    "_comment": "OpenClaw 高级配置",
+    "models": {
+      "mode": "merge",
+      "providers": {
+        "omlx": {
+          "baseUrl": "http://127.0.0.1:8008/v1",
+          "apiKey": "your-secure-api-key-here",
+          "api": "openai-completions",
+          "models": [
+            {
+              "id": "gemma-4-e4b-it-4bit",
+              "name": "Gemma 4 4B Instruct 4bit",
+              "description": "高效能本地模型",
+              "contextWindow": 32768,
+              "maxTokens": 4096,
+              "input": ["text"],
+              "reasoning": false,
+              "cost": {
+                "input": 0,
+                "output": 0,
+                "cacheRead": 0,
+                "cacheWrite": 0
+              },
+              "compat": {
+                "supportsTools": false,
+                "requiresStringContent": true
+              }
+            }
+          ]
+        },
+        "omlx_optimized": {
+          "_comment": "oMLX 优化配置（多实例负载均衡）",
+          "baseUrl": "http://127.0.0.1:8009/v1",
+          "apiKey": "ak47",
+          "api": "openai-completions",
+          "models": []
+        }
+      }
+    },
+    "agents": {
+      "defaults": {
+        "workspace": "~/.openclaw/workspace",
+        "models": {
+          "omlx/gemma-4-e4b-it-4bit": {
+            "alias": "Local-Gemma"
+          },
+          "zhipuai/glm-5.1": {
+            "alias": "Cloud-GLM"
+          }
+        },
+        "model": {
+          "_comment": "智能降级配置",
+          "primary": "zhipuai/glm-5.1",
+          "fallbacks": [
+            "omlx/gemma-4-e4b-it-4bit",
+            "anthropic/claude-sonnet-4-6"
+          ]
+        },
+        "imageModel": "zhipuai/glm-5v-turbo",
+        "compaction": {
+          "mode": "safeguard",
+          "targetSize": 100000
+        }
+      }
+    },
+    "gateway": {
+      "mode": "local",
+      "port": 18789,
+      "bind": "loopback",
+      "auth": {
+        "mode": "token",
+        "token": "your-gateway-token"
+      },
+      "performance": {
+        "cache": {
+          "enabled": true,
+          "maxSize": "1GB"
+        },
+        "requestTimeout": 120000,
+        "maxConcurrentRequests": 10
+      }
+    }
+  },
+
+  "load_balancing": {
+    "_comment": "负载均衡配置",
+    "strategy": "round_robin",
+    "providers": [
+      {
+        "name": "omlx_primary",
+        "baseUrl": "http://127.0.0.1:8008/v1",
+        "weight": 1
+      },
+      {
+        "name": "omlx_secondary",
+        "baseUrl": "http://127.0.0.1:8009/v1",
+        "weight": 1
+      }
+    ],
+    "healthCheck": {
+      "enabled": true,
+      "interval": 30000,
+      "endpoint": "/health"
+    }
+  },
+
+  "rate_limiting": {
+    "_comment": "速率限制配置",
+    "enabled": true,
+    "requests_per_minute": 60,
+    "burst_size": 10,
+    "strategy": "token_bucket"
+  },
+
+  "security": {
+    "_comment": "安全配置",
+    "api_key_rotation": {
+      "enabled": true,
+      "rotation_period": 2592000,
+      "grace_period": 604800
+    },
+    "ip_whitelist": {
+      "enabled": true,
+      "allowed_ips": ["127.0.0.1", "localhost"]
+    },
+    "request_validation": {
+      "max_tokens_per_request": 8192,
+      "max_messages_per_conversation": 50
+    }
+  },
+
+  "monitoring": {
+    "_comment": "监控配置",
+    "enabled": true,
+    "metrics": {
+      "endpoint": "/metrics",
+      "format": "prometheus"
+    },
+    "logging": {
+      "level": "info",
+      "format": "json",
+      "output": ["stdout", "file"],
+      "file_path": "~/.omlx/logs/metrics.log"
+    },
+    "alerts": {
+      "high_error_rate": {
+        "enabled": true,
+        "threshold": 0.05,
+        "window": 300
+      },
+      "slow_response": {
+        "enabled": true,
+        "threshold": 5000,
+        "window": 60
+      }
+    }
+  },
+
+  "examples": {
+    "_comment": "使用场景示例",
+
+    "scenario_1_pure_local": {
+      "_description": "纯本地模式（离线使用）",
+      "config": {
+        "agents.defaults.model.primary": "omlx/gemma-4-e4b-it-4bit",
+        "agents.defaults.model.fallbacks": []
+      }
+    },
+
+    "scenario_2_smart_fallback": {
+      "_description": "智能降级模式（推荐）",
+      "config": {
+        "agents.defaults.model.primary": "zhipuai/glm-5.1",
+        "agents.defaults.model.fallbacks[0]": "omlx/gemma-4-e4b-it-4bit"
+      }
+    },
+
+    "scenario_3_cost_optimization": {
+      "_description": "成本优化模式",
+      "config": {
+        "agents.defaults.model.primary": "omlx/gemma-4-e4b-it-4bit",
+        "agents.defaults.model.fallbacks[0]": "zhipuai/glm-5.1"
+      }
+    },
+
+    "scenario_4_multi_model_collaboration": {
+      "_description": "多模型协同",
+      "config": {
+        "agents.defaults.model.primary": "zhipuai/glm-5.1",
+        "agents.defaults.model.fallbacks[0]": "omlx/gemma-4-e4b-it-4bit",
+        "agents.defaults.imageModel": "zhipuai/glm-5v-turbo"
+      }
+    },
+
+    "scenario_5_load_balancing": {
+      "_description": "负载均衡模式",
+      "config": {
+        "agents.defaults.model.primary": "omlx/gemma-4-e4b-it-4bit",
+        "agents.defaults.model.fallbacks": [
+          "omlx_optimized/gemma-4-e4b-it-4bit",
+          "zhipuai/glm-5.1"
+        ]
+      }
+    }
+  },
+
+  "performance_tuning": {
+    "_comment": "性能调优配置",
+
+    "low_latency": {
+      "_description": "低延迟配置",
+      "omlx": {
+        "scheduler.max_concurrent_requests": 4,
+        "cache.hot_cache_max_size": "2GB",
+        "sampling.max_tokens": 1024
+      }
+    },
+
+    "high_throughput": {
+      "_description": "高吞吐配置",
+      "omlx": {
+        "scheduler.max_concurrent_requests": 16,
+        "cache.enabled": true,
+        "cache.ssd_cache_max_size": "20GB"
+      }
+    },
+
+    "memory_efficient": {
+      "_description": "内存优化配置",
+      "omlx": {
+        "memory.max_process_memory": "4GB",
+        "cache.hot_cache_max_size": "256MB",
+        "scheduler.max_concurrent_requests": 2
+      }
+    },
+
+    "quality_optimized": {
+      "_description": "质量优化配置",
+      "openclaw": {
+        "agents.defaults.model.primary": "zhipuai/glm-5.1",
+        "agents.defaults.model.fallbacks[0]": "anthropic/claude-sonnet-4-6"
+      },
+      "sampling": {
+        "temperature": 0.7,
+        "top_p": 0.95,
+        "max_tokens": 4096
+      }
+    }
+  },
+
+  "troubleshooting": {
+    "_comment": "故障排除配置",
+
+    "verbose_logging": {
+      "_description": "详细日志（调试用）",
+      "omlx": {
+        "server.log_level": "debug",
+        "logging.log_level": "debug"
+      },
+      "openclaw": {
+        "gateway.debug": true
+      }
+    },
+
+    "minimal_config": {
+      "_description": "最小配置（测试用）",
+      "omlx": {
+        "server.port": 8008,
+        "auth.api_key": "ak47"
+      },
+      "openclaw": {
+        "models.providers.omlx.baseUrl": "http://127.0.0.1:8008/v1",
+        "models.providers.omlx.apiKey": "ak47"
+      }
+    }
+  }
+}
